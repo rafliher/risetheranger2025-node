@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  lovely-forensic-suite:
+    # Konfigurasi build:
+    # Memberi tahu Docker Compose untuk membangun image menggunakan Dockerfile
+    # yang ada di direktori yang sama dengan file compose ini.
+    build:
+      context: ./
+    
+    # Memberi nama kontainer agar mudah diidentifikasi
+    container_name: lovely-forensic-suite-challenge
+    
+    # Pemetaan Port:
+    # Memetakan port 5000 di host ke port 5000 di dalam kontainer.
+    ports:
+      - "5000:5000"
+      
+    # OPSI KRUSIAL:
+    # Diperlukan agar perintah 'mount' di dalam fitur analisis disk image dapat berfungsi.
+    privileged: true
+    
+    # Kebijakan Restart:
+    # Mengatur agar kontainer otomatis restart jika terjadi crash.
+    restart: always

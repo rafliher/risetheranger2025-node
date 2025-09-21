@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG Inspector - Lovely Forensic Suite</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #1e1e2f; color: #e0e0e0; }
+      .header { background-color: #2a2a45; padding: 1em 2em; border-bottom: 2px solid #7a73ff; display: flex; justify-content: space-between; align-items: center; }
+      .header h1 { margin: 0; color: #fff; }
+      .header a { color: #b0b0c0; text-decoration: none; }
+      .container { max-width: 900px; margin: 2em auto; padding: 2em; background-color: #2a2a45; border-radius: 8px; }
+        h2, h3 { border-bottom: 1px solid #444; padding-bottom: 0.5em; }
+        input[type="file"] { background-color: #333; color: #fff; padding: 8px; border-radius: 4px; border: 1px solid #555; margin-bottom: 1em; }
+        input[type="submit"] { background-color: #7a73ff; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1em; }
+        input[type="submit"]:hover { background-color: #625ad9; }
+      .result-box { background-color: #121212; border: 1px solid #444; padding: 1em; border-radius: 5px; margin-top: 1em; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; }
+      .error-box { background-color: #4d2828; border: 1px solid #995252; color: #ffc8c8; padding: 1em; border-radius: 5px; }
+      .success-box { background-color: #284d34; border: 1px solid #529966; color: #c8ffda; padding: 1em; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PNG Metadata Inspector</h1>
+        <a href="/">← Back to Dashboard</a>
+    </div>
+    <div class="container">
+        <h2>Upload Image</h2>
+        <form action="/analyze/png" method="post" enctype="multipart/form-data">
+          <p>Select a PNG file for detailed metadata and integrity analysis.</p>
+          <input type="file" name="png_file" accept="image/png" required>
+          <br>
+          <input type="submit" value="Inspect PNG">
+        </form>
+        
+        {% if png_result %}
+            <h2>Analysis Report</h2>
+
+            {% if png_result.error %}
+                <div class="error-box">{{ png_result.error }}</div>
+            {% else %}
+                <h3>ExifTool Output:</h3>
+                <div class="result-box"><pre>{{ png_result.exif_data }}</pre></div>
+
+                <h3>Pngcheck Output:</h3>
+                <div class="result-box"><pre>{{ png_result.pngcheck_data }}</pre></div>
+
+                {% if png_result.lftd_header_found %}
+                    <h3>LFTD Custom Chunk Evaluation:</h3>
+                    <div class="success-box">
+                        <strong>Result:</strong> {{ png_result.eval_result }}
+                    </div>
+                {% endif %}
+
+                {% if png_result.processing_error %}
+                    <h3>Processing Error:</h3>
+                    <div class="error-box">{{ png_result.processing_error }}</div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
