@@ -1,0 +1,8 @@
+services:
+  JJ:
+    container_name: web-Di-Laut-Kita-Jaya
+    build: .
+    ports:
+      - "33201:8080"
+    environment:
+      - FLAG=RTR{fake_flag}
