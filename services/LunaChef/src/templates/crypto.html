@@ -1,0 +1,375 @@
+{% extends "base.html" %}
+
+{% block title %}Luna's Cryptographic Sanctum - LunaChef App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center mb-4">
+        <h1 class="luna-title display-4 mb-3">🌙✨ Luna's Cryptographic Sanctum</h1>
+        <p class="lead text-muted">Harness the celestial power of encryption and decryption</p>
+    </div>
+    
+    <!-- Luna-themed tabs -->
+    <ul class="nav nav-tabs mb-4" id="cryptoTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="encryption-tab" data-bs-toggle="tab" data-bs-target="#encryption" type="button" role="tab">
+                🌕 Moonlight Encryption
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="signing-tab" data-bs-toggle="tab" data-bs-target="#signing" type="button" role="tab">
+                ✨ Stellar Signatures
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="hashing-tab" data-bs-toggle="tab" data-bs-target="#hashing" type="button" role="tab">
+                🌌 Luna's Hash Magic
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="cryptoTabContent">
+        <!-- Encryption/Decryption Tab -->
+        <div class="tab-pane fade show active" id="encryption" role="tabpanel">
+            <div class="luna-card p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="luna-title mb-3">🌕 Moonlight Encryption Ritual</h4>
+                        <p class="text-muted mb-4">Invoke Luna's power to protect your secrets</p>
+                        <form id="encryptForm" onsubmit="return false;">
+                            <div class="mb-3">
+                                <label for="encryptText" class="form-label fw-bold">📜 Message to Enchant:</label>
+                                <textarea class="form-control" id="encryptText" name="text" rows="4" placeholder="Enter your message for Luna's protection..."></textarea>
+                            </div>
+                            <button type="button" class="luna-btn w-100" onclick="submitEncryptForm()">
+                                🌙 Cast Encryption Spell
+                            </button>
+                        </form>
+                        <div id="encryptResult" class="result-box mt-3" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4 class="luna-title mb-3">🌔 Eclipse Decryption Ritual</h4>
+                        <p class="text-muted mb-4">Unveil Luna's hidden messages</p>
+                        <form id="decryptForm" onsubmit="return false;">
+                            <div class="mb-3">
+                                <label for="decryptText" class="form-label fw-bold">🔓 Encrypted Message to Decode:</label>
+                                <textarea class="form-control" id="decryptText" name="encrypted_data" rows="4" placeholder="Enter the encrypted message to reveal..."></textarea>
+                            </div>
+                            <button type="button" class="luna-btn w-100" onclick="submitDecryptForm()">
+                                🌔 Cast Decryption Spell
+                            </button>
+                        </form>
+                        <div id="decryptResult" class="result-box mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Signing/Verification Tab -->
+        <div class="tab-pane fade" id="signing" role="tabpanel">
+            <div class="luna-card p-4">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4 class="luna-title mb-3">✨ Stellar Signing Ceremony</h4>
+                        <p class="text-muted mb-4">Seal your message with Luna's divine signature</p>
+                        <form id="signForm" onsubmit="return false;">
+                            <div class="mb-3">
+                                <label for="signText" class="form-label fw-bold">📜 Message to Bless:</label>
+                                <textarea class="form-control" id="signText" name="data" rows="4" placeholder="Enter your message to receive Luna's signature..."></textarea>
+                            </div>
+                            <button type="button" class="luna-btn w-100" onclick="submitSignForm()">
+                                ✨ Cast Signature Spell
+                            </button>
+                        </form>
+                        <div id="signResult" class="result-box mt-3" style="display: none;"></div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4 class="luna-title mb-3">🔮 Cosmic Verification Ritual</h4>
+                        <p class="text-muted mb-4">Consult the cosmic oracle about signature authenticity</p>
+                        <form id="verifyForm" onsubmit="return false;">
+                            <div class="mb-3">
+                                <label for="verifyMessage" class="form-label fw-bold">📜 Original Message:</label>
+                                <textarea class="form-control" id="verifyMessage" name="data" rows="2" placeholder="Enter the original message..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="verifySignature" class="form-label fw-bold">🌌 Divine Signature:</label>
+                                <textarea class="form-control" id="verifySignature" name="signature" rows="2" placeholder="Enter the signature to verify..."></textarea>
+                            </div>
+                            <button type="button" class="luna-btn w-100" onclick="submitVerifyForm()">
+                                🔮 Consult Oracle
+                            </button>
+                        </form>
+                        <div id="verifyResult" class="result-box mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Hashing Tab -->
+        <div class="tab-pane fade" id="hashing" role="tabpanel">
+            <div class="luna-card p-4">
+                <div class="text-center">
+                    <h4 class="luna-title mb-3">🌌 Luna's Hash Magic Circle</h4>
+                    <p class="text-muted mb-4">Transform your data into celestial fingerprints</p>
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <form id="hashForm" onsubmit="return false;">
+                                <div class="mb-3">
+                                    <label for="hashText" class="form-label fw-bold">📜 Data to Transform:</label>
+                                    <textarea class="form-control" id="hashText" name="data" rows="4" placeholder="Enter your data to create a celestial fingerprint..."></textarea>
+                                </div>
+                                <button type="button" class="luna-btn w-100" onclick="submitHashForm()">
+                                    🌌 Cast Hash Spell
+                                </button>
+                            </form>
+                            <div id="hashResult" class="result-box mt-3" style="display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Define all helper functions first
+window.showToast = function(message, type = 'info') {
+    const bgColor = type === 'success' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 
+                   type === 'error' ? 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' : 
+                   'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)';
+    
+    try {
+        if (typeof Toastify !== 'undefined') {
+            Toastify({
+                text: message,
+                duration: 4000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: bgColor,
+                    color: "white",
+                    fontFamily: "'Cinzel', serif",
+                    fontSize: "14px",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.3)"
+                }
+            }).showToast();
+        } else {
+            alert(message);
+        }
+    } catch (e) {
+        console.warn('Toast error, using alert:', e);
+        alert(message);
+    }
+};
+
+window.copyToClipboard = function(elementId) {
+    try {
+        const element = document.getElementById(elementId);
+        if (!element) {
+            window.showToast('Element not found for copying', 'error');
+            return;
+        }
+        const text = element.textContent;
+        navigator.clipboard.writeText(text).then(function() {
+            window.showToast('📋 Copied to lunar clipboard!', 'success');
+        }).catch(function(err) {
+            console.error('Failed to copy: ', err);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                window.showToast('📋 Copied to lunar clipboard!', 'success');
+            } catch (fallbackErr) {
+                window.showToast('Failed to copy to clipboard', 'error');
+            }
+            document.body.removeChild(textArea);
+        });
+    } catch (e) {
+        console.error('Copy function error:', e);
+        window.showToast('Copy function failed', 'error');
+    }
+};
+
+window.submitForm = function(formId, endpoint, resultDivId, successCallback) {
+    console.log(`🚀 Submitting ${formId} to ${endpoint}`);
+    
+    const form = document.getElementById(formId);
+    const resultDiv = document.getElementById(resultDivId);
+    
+    if (!form) {
+        console.error(`❌ Form ${formId} not found`);
+        alert('Form not found!');
+        return;
+    }
+    
+    if (!resultDiv) {
+        console.error(`❌ Result div ${resultDivId} not found`);
+        alert('Result div not found!');
+        return;
+    }
+    
+    const formData = new FormData(form);
+    
+    // Debug form data
+    console.log('Form data contents:');
+    for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+    }
+    
+    // Show loading state
+    resultDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
+    resultDiv.style.display = 'block';
+    
+    fetch(endpoint, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        console.log(`📡 Response status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('📥 Success data:', data);
+        successCallback(data, resultDiv);
+    })
+    .catch(error => {
+        console.error('❌ Fetch error:', error);
+        window.showToast('🌫️ Connection to Luna\'s realm failed', 'error');
+        resultDiv.innerHTML = '<div class="error">🌫️ Connection to Luna\'s realm was disrupted: ' + error.message + '</div>';
+        resultDiv.style.display = 'block';
+    });
+};
+
+// Define all main submit functions
+window.submitEncryptForm = function() {
+    console.log('Encrypt button clicked!');
+    window.submitForm('encryptForm', '/encrypt', 'encryptResult', function(data, resultDiv) {
+        console.log('Encryption response:', data);
+        if (data.success) {
+            window.showToast('✨ Luna has woven her encryption magic!', 'success');
+            resultDiv.innerHTML = `
+                <div class="success mb-3">✨ Encryption spell cast successfully!</div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>🌙 Encrypted by Luna's Magic:</strong>
+                    <button class="btn btn-sm luna-btn" onclick="copyToClipboard('encryptedData')">📋 Copy Spell</button>
+                </div>
+                <div class="mt-1 p-3 luna-card font-monospace" id="encryptedData" style="word-break: break-all;">${data.encrypted_data}</div>
+            `;
+        } else {
+            window.showToast("💫 Luna's magic failed: " + data.error, "error");
+            resultDiv.innerHTML = '<div class="error">💫 Luna\'s magic encountered resistance: ' + data.error + '</div>';
+        }
+    });
+};
+
+window.submitDecryptForm = function() {
+    console.log('Decrypt button clicked!');
+    window.submitForm('decryptForm', '/decrypt', 'decryptResult', function(data, resultDiv) {
+        console.log('Decryption response:', data);
+        if (data.success) {
+            window.showToast("🌔 Luna's eclipse has revealed the truth!", "success");
+            resultDiv.innerHTML = `
+                <div class="success mb-3">🌔 Eclipse revelation successful!</div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>🌕 Revealed by Luna's Eclipse:</strong>
+                    <button class="btn btn-sm luna-btn" onclick="copyToClipboard('decryptedData')">📋 Copy Truth</button>
+                </div>
+                <div class="mt-1 p-3 luna-card" id="decryptedData">${data.decrypted_text}</div>
+            `;
+        } else {
+            window.showToast("🌑 Luna's eclipse was clouded: " + data.error, "error");
+            resultDiv.innerHTML = '<div class="error">🌑 The eclipse was clouded: ' + data.error + '</div>';
+        }
+    });
+};
+
+window.submitSignForm = function() {
+    console.log('Sign button clicked!');
+    window.submitForm('signForm', '/sign', 'signResult', function(data, resultDiv) {
+        console.log('Signing response:', data);
+        if (data.success) {
+            window.showToast('✨ Luna has blessed your message with her stellar signature!', 'success');
+            resultDiv.innerHTML = `
+                <div class="success mb-3">✨ Stellar signature ceremony complete!</div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>🌌 Luna's Divine Signature:</strong>
+                    <button class="btn btn-sm luna-btn" onclick="copyToClipboard('signatureData')">📋 Copy Blessing</button>
+                </div>
+                <div class="mt-1 p-3 luna-card font-monospace" id="signatureData" style="word-break: break-all;">${data.signature}</div>
+            `;
+        } else {
+            window.showToast("💫 Luna's blessing was interrupted: " + data.error, "error");
+            resultDiv.innerHTML = '<div class="error">💫 Blessing interrupted: ' + data.error + '</div>';
+        }
+    });
+};
+
+window.submitVerifyForm = function() {
+    console.log('Verify button clicked!');
+    window.submitForm('verifyForm', '/verify', 'verifyResult', function(data, resultDiv) {
+        console.log('Verification response:', data);
+        if (data.success) {
+            const isValid = data.valid;
+            const message = isValid ? '🔮 The cosmic oracle confirms: Signature is authentic!' : '🌫️ The cosmic oracle warns: Signature is false!';
+            const toastType = isValid ? 'success' : 'error';
+            window.showToast(message, toastType);
+            resultDiv.innerHTML = `
+                <div class="${isValid ? 'success' : 'error'} text-center">
+                    ${isValid ? '🔮✨' : '🌫️⚠️'} ${isValid ? 'The cosmic oracle speaks: This signature bears Luna\'s authentic blessing' : 'The cosmic oracle warns: This signature lacks Luna\'s true blessing'}
+                </div>
+            `;
+        } else {
+            window.showToast("🔮 The oracle's vision is clouded: " + data.error, "error");
+            resultDiv.innerHTML = '<div class="error">🔮 Oracle\'s vision clouded: ' + data.error + '</div>';
+        }
+    });
+};
+
+window.submitHashForm = function() {
+    console.log('Hash button clicked!');
+    window.submitForm('hashForm', '/hash', 'hashResult', function(data, resultDiv) {
+        console.log('Hashing response:', data);
+        if (data.success) {
+            window.showToast('🌌 Luna has forged a celestial fingerprint using SHA-256 magic!', 'success');
+            resultDiv.innerHTML = `
+                <div class="success mb-3">🌌 Celestial hash magic complete!</div>
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <strong>🌙 Luna's Celestial Fingerprint (SHA-256):</strong>
+                    <button class="btn btn-sm luna-btn" onclick="copyToClipboard('hashData')">📋 Copy Hash</button>
+                </div>
+                <div class="mt-1 p-3 luna-card font-monospace" id="hashData" style="word-break: break-all;">${data.hash}</div>
+            `;
+        } else {
+            window.showToast("🌌 Luna's hash magic was disrupted: " + data.error, "error");
+            resultDiv.innerHTML = '<div class="error">🌌 Hash magic disrupted: ' + data.error + '</div>';
+        }
+    });
+};
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🌙 Luna\'s Cryptographic Sanctum initialized');
+    
+    // Test if Toastify is available
+    if (typeof Toastify === 'undefined') {
+        console.error('Toastify is not loaded!');
+    }
+    
+    console.log('🌙 All Luna\'s cryptographic rituals are ready');
+});
+</script>
+{% endblock %}

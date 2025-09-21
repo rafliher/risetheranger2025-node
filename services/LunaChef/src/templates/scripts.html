@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Sacred Spellbook - LunaChef App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="luna-title display-4 mb-3">📜✨ Luna's Sacred Spellbook</h1>
+        <p class="lead text-muted">Explore the ancient source code and uncover the secrets of cryptographic magic</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="luna-card h-100 p-4 text-center">
+                <div class="mb-3" style="font-size: 3rem;">🌕</div>
+                <h5 class="luna-title">Moonlight Encryption</h5>
+                <p class="text-muted">Simple XOR encryption and decryption spells</p>
+                <a href="/scripts/encryption" class="luna-btn">📜 View Spell</a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="luna-card h-100 p-4 text-center">
+                <div class="mb-3" style="font-size: 3rem;">✨</div>
+                <h5 class="luna-title">Stellar Signing</h5>
+                <p class="text-muted">RSA digital signatures and verification spells</p>
+                <a href="/scripts/signing" class="luna-btn">📜 View Spell</a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="luna-card h-100 p-4 text-center">
+                <div class="mb-3" style="font-size: 3rem;">🌌</div>
+                <h5 class="luna-title">Hash Magic Circle</h5>
+                <p class="text-muted">Advanced hashing algorithms for data integrity</p>
+                <a href="/scripts/hash" class="luna-btn">📜 View Spell</a>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="luna-card h-100 p-4 text-center">
+                <div class="mb-3" style="font-size: 3rem;">🌠</div>
+                <h5 class="luna-title">Cryptographic Sanctum</h5>
+                <p class="text-muted">Interactive magical crypto playground</p>
+                <a href="/crypto" class="luna-btn">🌙 Enter Sanctum</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="luna-card p-4 mt-5">
+        <h6 class="luna-title mb-3">🌟 About Luna's Sacred Spells:</h6>
+        <p class="mb-0 text-muted">
+            All cryptographic algorithms in Luna's sacred spellbook are woven natively in Python without external magical libraries. 
+            The spells channel Luna's celestial power for educational enlightenment and mystical understanding. 
+            Click on any spell above to uncover its complete source code and learn the ancient arts of cryptography.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

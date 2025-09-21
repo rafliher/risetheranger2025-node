@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}{{ service_name|title }} Spell - Luna's Sacred Spellbook{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="luna-title mb-2">✨ {{ service_name|title }} Spell Scroll</h1>
+            <p class="text-muted mb-0">🌙 service_{{ service_name }}.py</p>
+        </div>
+        <div class="d-flex gap-3">
+            <button class="luna-btn" onclick="copyToClipboard('source-code')">
+                📋 Copy Ancient Wisdom
+            </button>
+            <a href="/scripts" class="luna-btn luna-btn-secondary">← Return to Spellbook</a>
+        </div>
+    </div>
+    
+    <!-- Code Display Section -->
+    <div class="luna-card p-0 position-relative">
+        <!-- Code Header -->
+        <div class="px-4 py-3 border-bottom" style="border-color: var(--luna-border) !important; background: rgba(74, 143, 219, 0.1);">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="luna-text fw-bold">🔮 Sacred Source Code</span>
+                <small class="text-muted">{{ content.split('\n')|length }} lines of mystical wisdom</small>
+            </div>
+        </div>
+        
+        <!-- Code Content -->
+        <div class="position-relative" style="background: #0a0e1a; max-height: 70vh; overflow-y: auto;">
+            <pre id="source-code" class="mb-0 p-4" style="
+                min-height: 100%;
+                overflow: visible;
+                font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace; 
+                font-size: 0.9rem; 
+                line-height: 1.6;
+                color: #e6f3ff;
+                background: transparent;
+                border: none;
+                border-radius: 0;
+                white-space: pre;
+            "><code class="language-python">{{ content }}</code></pre>
+        </div>
+    </div>
+    
+    <!-- Info Footer -->
+    <div class="mt-4 p-4 rounded-3" style="background: rgba(74, 143, 219, 0.1); border: 1px solid var(--luna-border);">
+        <div class="d-flex align-items-start gap-3">
+            <div class="flex-shrink-0">
+                <span style="font-size: 2rem;">🌟</span>
+            </div>
+            <div>
+                <h6 class="luna-title mb-2">About This Sacred Spell</h6>
+                <p class="mb-0 text-muted" style="line-height: 1.6;">
+                    This mystical source code represents the <strong>{{ service_name }}</strong> spell in Luna's Sacred Spellbook. 
+                    All cryptographic operations channel Luna's celestial power through native Python incantations, 
+                    carefully crafted for educational enlightenment and magical understanding.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Enhanced syntax highlighting for better readability */
+.luna-card {
+    scrollbar-width: thin;
+    scrollbar-color: var(--luna-primary) rgba(74, 143, 219, 0.1);
+}
+
+.luna-card::-webkit-scrollbar {
+    width: 8px;
+}
+
+.luna-card::-webkit-scrollbar-track {
+    background: rgba(74, 143, 219, 0.1);
+    border-radius: 4px;
+}
+
+.luna-card::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, var(--luna-primary), var(--luna-accent));
+    border-radius: 4px;
+}
+
+.luna-card::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(to bottom, var(--luna-accent), var(--luna-secondary));
+}
+
+/* Remove scrollbar from pre element to avoid double scrollbars */
+#source-code {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+#source-code::-webkit-scrollbar {
+    display: none;
+}
+
+/* Enhanced luna-btn-secondary style */
+.luna-btn-secondary {
+    background: rgba(74, 143, 219, 0.2) !important;
+    border: 1px solid var(--luna-border) !important;
+    color: var(--luna-text) !important;
+}
+
+.luna-btn-secondary:hover {
+    background: rgba(74, 143, 219, 0.3) !important;
+    border-color: var(--luna-primary) !important;
+    transform: translateY(-1px);
+    box-shadow: var(--luna-glow);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+// Copy to clipboard function for the script viewer with Toastify notifications
+function copyToClipboard(elementId) {
+    try {
+        const element = document.getElementById(elementId);
+        if (!element) {
+            Toastify({
+                text: "❌ Element not found for copying",
+                duration: 3000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "linear-gradient(135deg, #dc3545, #c82333)",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(220, 53, 69, 0.3)"
+                }
+            }).showToast();
+            return;
+        }
+        
+        const text = element.textContent;
+        
+        navigator.clipboard.writeText(text).then(function() {
+            Toastify({
+                text: "📋✨ Ancient wisdom copied to clipboard!",
+                duration: 4000,
+                gravity: "top",
+                position: "right",
+                style: {
+                    background: "linear-gradient(135deg, #4a8fdb, #6ba3e8)",
+                    borderRadius: "8px",
+                    boxShadow: "0 4px 12px rgba(74, 143, 219, 0.4)",
+                    color: "#ffffff",
+                    fontWeight: "500"
+                }
+            }).showToast();
+        }).catch(function(err) {
+            console.error('Failed to copy: ', err);
+            
+            // Fallback for older browsers
+            try {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                
+                const successful = document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    Toastify({
+                        text: "📋✨ Ancient wisdom copied to clipboard!",
+                        duration: 4000,
+                        gravity: "top",
+                        position: "right",
+                        style: {
+                            background: "linear-gradient(135deg, #4a8fdb, #6ba3e8)",
+                            borderRadius: "8px",
+                            boxShadow: "0 4px 12px rgba(74, 143, 219, 0.4)",
+                            color: "#ffffff",
+                            fontWeight: "500"
+                        }
+                    }).showToast();
+                } else {
+                    throw new Error('Copy command failed');
+                }
+            } catch (fallbackErr) {
+                Toastify({
+                    text: "❌ Failed to copy to clipboard",
+                    duration: 4000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: "linear-gradient(135deg, #dc3545, #c82333)",
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(220, 53, 69, 0.3)"
+                    }
+                }).showToast();
+            }
+        });
+    } catch (e) {
+        console.error('Copy function error:', e);
+        Toastify({
+            text: "❌ Copy function failed",
+            duration: 4000,
+            gravity: "top",
+            position: "right",
+            style: {
+                background: "linear-gradient(135deg, #dc3545, #c82333)",
+                borderRadius: "8px",
+                boxShadow: "0 4px 12px rgba(220, 53, 69, 0.3)"
+            }
+        }).showToast();
+    }
+}
+</script>
+{% endblock %}

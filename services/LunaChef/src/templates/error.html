@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ error_title }} - LunaChef App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="text-center mb-5">
+        <h1 class="luna-title display-4 mb-3">{{ error_title }}</h1>
+        <p class="lead text-muted">{{ error_message }}</p>
+    </div>
+    
+    <div class="luna-card p-4 text-center">
+        <div class="mb-4" style="font-size: 4rem;">🌙</div>
+        <h5 class="luna-title mb-3">Luna's Guidance</h5>
+        <p class="text-muted mb-4">
+            The celestial paths have shifted. Luna suggests returning to familiar grounds 
+            and trying a different mystical approach.
+        </p>
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="/" class="luna-btn">🏠 Return Home</a>
+            <a href="/scripts" class="luna-btn">📜 View Spellbook</a>
+            <a href="/crypto" class="luna-btn">🌙 Try Crypto Magic</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

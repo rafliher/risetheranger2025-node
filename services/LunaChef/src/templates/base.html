@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LunaChef App{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Luna Dark Theme - Primary (matching hero artwork) */
+            --luna-primary: #4a8fdb;
+            --luna-secondary: #6ba3e8;
+            --luna-accent: #87c5ff;
+            --luna-dark: #0a0e1a;
+            --luna-darker: #050812;
+            --luna-mid: #1a2332;
+            --luna-light: #2a3544;
+            --luna-bg: radial-gradient(ellipse at center, #1a2332 0%, #0a0e1a 70%, #050812 100%);
+            --luna-card-bg: rgba(26, 35, 50, 0.8);
+            --luna-text: #e6f3ff;
+            --luna-text-secondary: #b8d4f0;
+            --luna-border: rgba(74, 143, 219, 0.3);
+            --luna-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+            --luna-glow: 0 0 25px rgba(74, 143, 219, 0.5);
+            --luna-glow-strong: 0 0 40px rgba(135, 197, 255, 0.6);
+        }
+        
+        /* Luna Light Theme */
+        [data-theme="light"] {
+            --luna-primary: #1e40af;
+            --luna-secondary: #3b82f6;
+            --luna-accent: #2563eb;
+            --luna-dark: #1e293b;
+            --luna-darker: #0f172a;
+            --luna-mid: #cbd5e1;
+            --luna-light: #e2e8f0;
+            --luna-bg: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 50%, #cbd5e1 100%);
+            --luna-card-bg: rgba(255, 255, 255, 0.9);
+            --luna-text: #1e293b;
+            --luna-text-secondary: #475569;
+            --luna-border: rgba(30, 64, 175, 0.3);
+            --luna-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            --luna-glow: 0 0 25px rgba(30, 64, 175, 0.3);
+            --luna-glow-strong: 0 0 40px rgba(37, 99, 235, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--luna-bg);
+            color: var(--luna-text);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Fixed background to prevent white spaces */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--luna-bg);
+            z-index: -2;
+        }
+
+        /* Magical particles background */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: var(--luna-accent);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            opacity: 0.6;
+            box-shadow: 0 0 6px var(--luna-accent);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.6; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
+        }
+
+        /* Luna themed components */
+        .luna-title {
+            font-family: 'Cinzel', serif;
+            color: var(--luna-primary);
+            text-shadow: var(--luna-glow);
+            font-weight: 600;
+        }
+
+        .luna-card {
+            background: var(--luna-card-bg);
+            border: 1px solid var(--luna-border);
+            border-radius: 15px;
+            box-shadow: var(--luna-shadow);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .luna-card:hover {
+            box-shadow: var(--luna-glow-strong);
+            transform: translateY(-2px);
+        }
+
+        .luna-btn {
+            background: linear-gradient(135deg, var(--luna-primary), var(--luna-secondary));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 143, 219, 0.3);
+        }
+
+        .luna-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--luna-glow-strong);
+            color: white;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            background: var(--luna-card-bg) !important;
+            border-bottom: 1px solid var(--luna-border);
+            backdrop-filter: blur(15px);
+        }
+
+        .navbar-brand {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            color: var(--luna-primary) !important;
+            text-shadow: var(--luna-glow);
+        }
+
+        .nav-link {
+            color: var(--luna-text) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--luna-primary) !important;
+            text-shadow: var(--luna-glow);
+        }
+
+        /* Form styling */
+        .form-control, .form-select {
+            background: var(--luna-card-bg);
+            border: 1px solid var(--luna-border);
+            color: var(--luna-text);
+            border-radius: 10px;
+            padding: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            background: var(--luna-card-bg);
+            border-color: var(--luna-primary);
+            color: var(--luna-text);
+            box-shadow: var(--luna-glow);
+        }
+
+        .form-control::placeholder {
+            color: var(--luna-text-secondary);
+        }
+
+        /* Light theme input improvements */
+        [data-theme="light"] .form-control,
+        [data-theme="light"] .form-select {
+            background: rgba(255, 255, 255, 0.95);
+            color: #1e293b;
+            border-color: rgba(30, 64, 175, 0.3);
+        }
+
+        [data-theme="light"] .form-control:focus,
+        [data-theme="light"] .form-select:focus {
+            background: rgba(255, 255, 255, 1);
+            color: #1e293b;
+            border-color: #1e40af;
+        }
+
+        [data-theme="light"] .form-control::placeholder {
+            color: #64748b;
+        }
+
+        /* Button improvements for light theme */
+        [data-theme="light"] .luna-btn {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        [data-theme="light"] .luna-btn:hover {
+            color: white;
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4);
+        }
+
+        /* Output styling */
+        .output-section {
+            background: var(--luna-card-bg);
+            border: 1px solid var(--luna-border);
+            border-radius: 10px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        /* Tab styling */
+        .nav-tabs {
+            border-bottom: 2px solid var(--luna-border);
+        }
+
+        .nav-tabs .nav-link {
+            border: none;
+            background: transparent;
+            color: var(--luna-text-secondary);
+            padding: 1rem 1.5rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--luna-card-bg);
+            color: var(--luna-primary);
+            border-bottom: 3px solid var(--luna-primary);
+            box-shadow: var(--luna-glow);
+        }
+
+        .nav-tabs .nav-link:hover {
+            color: var(--luna-primary);
+            text-shadow: var(--luna-glow);
+        }
+
+        /* Theme toggle */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--luna-card-bg);
+            border: 1px solid var(--luna-border);
+            border-radius: 50px;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            box-shadow: var(--luna-glow);
+            transform: scale(1.1);
+        }
+
+        .theme-toggle .theme-icon {
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Sound indicator */
+        .sound-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: var(--luna-card-bg);
+            border: 1px solid var(--luna-border);
+            border-radius: 50px;
+            padding: 0.75rem 1rem;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--luna-text-secondary);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0.8;
+        }
+
+        .sound-indicator:hover {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+
+        .sound-indicator.playing {
+            border-color: var(--luna-primary);
+            box-shadow: var(--luna-glow);
+            opacity: 1;
+        }
+
+        .sound-indicator.waiting {
+            border-color: var(--luna-accent);
+            box-shadow: 0 0 15px rgba(135, 197, 255, 0.5);
+            animation: waitingPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes waitingPulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .sound-indicator .sound-icon {
+            width: 12px;
+            height: 12px;
+            background: var(--luna-text-secondary);
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .sound-indicator.playing .sound-icon {
+            background: var(--luna-primary);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 0.4rem;
+            }
+
+            .sound-indicator {
+                bottom: 10px;
+                right: 10px;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.8rem;
+            }
+
+            .luna-card {
+                margin: 0.5rem;
+            }
+        }
+
+        /* Smooth page transitions */
+        .container {
+            opacity: 0;
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header styling for light mode */
+        [data-theme="light"] .navbar {
+            background: rgba(255, 255, 255, 0.95) !important;
+            border-bottom-color: rgba(30, 64, 175, 0.2);
+        }
+
+        [data-theme="light"] .navbar-brand {
+            color: #1e40af !important;
+        }
+
+        [data-theme="light"] .nav-link {
+            color: #475569 !important;
+        }
+
+        [data-theme="light"] .nav-link:hover {
+            color: #1e40af !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Theme Toggle -->
+    <div class="theme-toggle" onclick="toggleTheme()">
+        <span class="theme-icon" id="themeIcon">🌙</span>
+    </div>
+
+    <!-- Sound Indicator -->
+    <div class="sound-indicator" id="soundIndicator">
+        <div class="sound-icon"></div>
+        <span id="soundStatus">Luna's Magic</span>
+    </div>
+
+    <!-- Magical Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">🌙 LunaChef</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">🏠 Sanctuary</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/crypto">✨ Cryptographic Spells</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/scripts">📜 Sacred Spellbook</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Audio Element -->
+    <audio id="backgroundAudio" preload="auto" autoplay loop>
+        Your browser does not support the audio element.
+    </audio>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <script>
+        // Audio tracks configuration
+        const audioTracks = [
+            '/backsound/Lunar Reverie.mp3',
+            '/backsound/Eclipsed Shadows.mp3',
+            '/backsound/Lunar Reverie (1).mp3',
+            '/backsound/Moonlit Shadows.mp3',
+            '/backsound/Moonlit Shadows (1).mp3',
+            '/backsound/Moonlit Shadows (2).mp3',
+            '/backsound/Moonlit Shadows (3).mp3'
+        ];
+        
+        const trackNames = [
+            'Lunar Reverie',
+            'Eclipsed Shadows',
+            'Lunar Reverie (Alt)',
+            'Moonlit Shadows',
+            'Moonlit Shadows (I)',
+            'Moonlit Shadows (II)',
+            'Moonlit Shadows (III)'
+        ];
+
+        // Audio system variables
+        let currentTrackIndex = 0;
+        let audioEnabled = false;
+        let audioInitialized = false;
+
+        // DOM elements
+        const audio = document.getElementById('backgroundAudio');
+        const soundIndicator = document.getElementById('soundIndicator');
+        const soundStatus = document.getElementById('soundStatus');
+
+        // Audio system initialization function
+        function initializeAudioSystem() {
+            console.log('Initializing Luna\'s audio system...');
+            
+            // Safety check
+            if (!audio || !soundIndicator || !soundStatus || audioTracks.length === 0) {
+                console.log('Audio system not available');
+                return false;
+            }
+            
+            // Reset state
+            audioEnabled = false;
+            
+            // Select random track
+            currentTrackIndex = Math.floor(Math.random() * audioTracks.length);
+            
+            // Set initial UI state to indicate waiting for interaction
+            soundIndicator.classList.add('waiting');
+            soundStatus.textContent = 'Click anywhere to activate Luna\'s magic...';
+            
+            // Set audio properties
+            audio.volume = 0.3;
+            audio.loop = false;
+            audio.preload = 'auto';
+            
+            // Load track immediately
+            loadTrack(currentTrackIndex);
+            
+            // Try to auto-start, but handle if browser blocks it
+            console.log('Attempting auto-start...');
+            setTimeout(() => {
+                if (!audioEnabled) {
+                    forceStartAudio();
+                }
+            }, 1000);
+            
+            // Event listeners
+            audio.addEventListener('canplay', function() {
+                console.log('Audio ready');
+                audioInitialized = true;
+                // Try auto-start if not already enabled
+                if (!audioEnabled) {
+                    console.log('Audio ready, attempting auto-start...');
+                    forceStartAudio();
+                }
+            });
+            
+            audio.addEventListener('canplaythrough', function() {
+                console.log('Audio fully ready');
+                // Try auto-start if not already enabled
+                if (!audioEnabled) {
+                    console.log('Audio fully ready, attempting auto-start...');
+                    forceStartAudio();
+                }
+            });
+            
+            audio.addEventListener('loadeddata', function() {
+                console.log('Audio data loaded');
+                // Try auto-start if not already enabled
+                if (!audioEnabled) {
+                    console.log('Audio data loaded, attempting auto-start...');
+                    forceStartAudio();
+                }
+            });
+            
+            audio.addEventListener('ended', function() {
+                console.log('Track ended, switching to next...');
+                nextTrack();
+            });
+            
+            audio.addEventListener('play', function() {
+                console.log('Audio playing:', trackNames[currentTrackIndex]);
+                audioEnabled = true;
+                
+                // Gradually increase volume
+                setTimeout(() => {
+                    audio.volume = 0.1;
+                    setTimeout(() => {
+                        audio.volume = 0.2;
+                        setTimeout(() => {
+                            audio.volume = 0.3;
+                        }, 200);
+                    }, 200);
+                }, 200);
+                
+                soundIndicator.classList.add('playing');
+                soundStatus.textContent = trackNames[currentTrackIndex];
+            });
+            
+            audio.addEventListener('pause', function() {
+                soundIndicator.classList.remove('playing');
+                soundStatus.textContent = 'Paused';
+            });
+            
+            audio.addEventListener('error', function(e) {
+                console.error('Audio error:', e);
+                soundStatus.textContent = 'Audio Error';
+                nextTrack();
+            });
+            
+            // Simple audio control - just click the sound indicator to start
+            console.log('Setting up simple sound indicator click handler...');
+            
+            if (soundIndicator) {
+                soundIndicator.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Sound indicator clicked!');
+                    
+                    if (!audioEnabled) {
+                        console.log('Starting audio from sound indicator click...');
+                        soundStatus.textContent = 'Starting audio...';
+                        forceStartAudio();
+                    } else {
+                        console.log('Audio already playing');
+                    }
+                });
+                
+                // Double-click to reset if needed
+                soundIndicator.addEventListener('dblclick', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Sound indicator double-clicked - resetting audio system');
+                    resetAudioSystem();
+                });
+                
+                console.log('Sound indicator click handlers set up successfully');
+            } else {
+                console.log('Sound indicator not found!');
+            }
+            
+            return true; // Audio system initialized successfully
+        }
+
+        // Initialize audio system on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAudioSystem();
+        });
+        
+        function resetAudioSystem() {
+            console.log('Resetting audio system...');
+            audioEnabled = false;
+            soundIndicator.classList.remove('playing');
+            soundIndicator.classList.add('waiting');
+            soundStatus.textContent = 'Click anywhere to activate Luna\'s magic...';
+            
+            // Pause and reset audio
+            audio.pause();
+            audio.currentTime = 0;
+            
+            console.log('Audio system reset complete');
+        }
+        
+        function forceStartAudio() {
+            if (audioEnabled) {
+                console.log('Audio already enabled, skipping start');
+                return;
+            }
+            
+            console.log('Starting Luna\'s audio...');
+            console.log('Current track:', trackNames[currentTrackIndex]);
+            console.log('Audio src:', audio.src);
+            
+            const playPromise = audio.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    console.log('Audio started successfully!');
+                    audioEnabled = true;
+                    soundIndicator.classList.remove('waiting');
+                    soundIndicator.classList.add('playing');
+                }).catch((error) => {
+                    console.log('Audio start failed:', error.name);
+                    // Reset interaction flag so user can try again
+                    interactionHandled = false;
+                    
+                    if (error.name === 'NotAllowedError') {
+                        console.log('Browser blocked autoplay - resetting for retry');
+                        soundStatus.textContent = 'Click anywhere to activate Luna\'s magic...';
+                        soundIndicator.classList.add('waiting');
+                    } else {
+                        console.log('Other audio error, trying next track...');
+                        nextTrack();
+                    }
+                });
+            } else {
+                console.log('Play promise undefined');
+            }
+        }
+        
+        // Reset function for stuck states
+        function resetAudioSystem() {
+            console.log('Resetting audio system...');
+            audioEnabled = false;
+            interactionHandled = false;
+            soundIndicator.classList.remove('playing');
+            soundIndicator.classList.add('waiting');
+            soundStatus.textContent = 'Click anywhere to activate Luna\'s magic...';
+        }
+        
+        function loadTrack(index) {
+            if (index >= 0 && index < audioTracks.length) {
+                console.log('Loading track:', trackNames[index]);
+                audio.src = audioTracks[index];
+                audio.load();
+                
+                if (soundStatus) {
+                    soundStatus.textContent = trackNames[index];
+                }
+            }
+        }
+        
+        function nextTrack() {
+            currentTrackIndex = (currentTrackIndex + 1) % audioTracks.length;
+            console.log('Switching to:', trackNames[currentTrackIndex]);
+            
+            loadTrack(currentTrackIndex);
+            
+            if (audioEnabled) {
+                audio.play().catch(() => {
+                    console.log('Failed to play next track');
+                });
+            }
+        }
+
+        // Theme system
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                themeIcon.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                body.setAttribute('data-theme', 'light');
+                themeIcon.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Initialize theme
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (savedTheme === 'light') {
+                document.body.setAttribute('data-theme', 'light');
+                themeIcon.textContent = '☀️';
+            }
+        });
+
+        // Particle system
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            const particleCount = 50;
+            
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 6 + 's';
+                particle.style.animationDuration = (4 + Math.random() * 4) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+
+        // Initialize particles
+        document.addEventListener('DOMContentLoaded', createParticles);
+
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            const text = element.textContent || element.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                Toastify({
+                    text: "✨ Ancient wisdom copied to your sacred scrolls!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: "linear-gradient(135deg, var(--luna-primary), var(--luna-secondary))",
+                        borderRadius: "10px",
+                        fontFamily: "Inter, sans-serif"
+                    }
+                }).showToast();
+            }).catch(() => {
+                Toastify({
+                    text: "⚠️ Failed to copy the mystical knowledge!",
+                    duration: 3000,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        background: "linear-gradient(135deg, #dc2626, #ef4444)",
+                        borderRadius: "10px",
+                        fontFamily: "Inter, sans-serif"
+                    }
+                }).showToast();
+            });
+        }
+        </script>
+        {% block scripts %}{% endblock %}
+</body>
+</html>
