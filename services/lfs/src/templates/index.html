@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Lovely Forensic Suite</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #1e1e2f; color: #e0e0e0; }
+       .header { background-color: #2a2a45; padding: 1em 2em; border-bottom: 2px solid #7a73ff; }
+       .header h1 { margin: 0; color: #fff; }
+       .container { padding: 2em; }
+       .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5em; }
+       .tool-card { background-color: #2a2a45; border-radius: 8px; padding: 1.5em; text-decoration: none; color: #e0e0e0; transition: transform 0.2s ease, box-shadow 0.2s ease; border-left: 4px solid transparent; }
+       .tool-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-left-color: #7a73ff; }
+       .tool-card h2 { margin-top: 0; color: #fff; }
+       .tool-card p { color: #b0b0c0; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Lovely Forensic Suite</h1>
+    </div>
+    <div class="container">
+        <h2>Analysis Dashboard</h2>
+        <div class="dashboard-grid">
+            <a href="/disk" class="tool-card">
+                <h2>Disk Image Triage</h2>
+                <p>Performs a quick filesystem triage to list contents of a raw disk image. Useful for initial assessment of removable media.</p>
+            </a>
+            <a href="/pdf" class="tool-card">
+                <h2>PDF Content & Action Analysis</h2>
+                <p>Extracts textual content and analyzes embedded document actions for potential scripts. Ideal for examining suspicious documents.</p>
+            </a>
+            <a href="/png" class="tool-card">
+                <h2>PNG Metadata Inspector</h2>
+                <p>Displays core image metadata and renders custom text-based annotations found within the image data structure.</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

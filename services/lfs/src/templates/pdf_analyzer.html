@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Analysis - Lovely Forensic Suite</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #1e1e2f; color: #e0e0e0; }
+       .header { background-color: #2a2a45; padding: 1em 2em; border-bottom: 2px solid #7a73ff; display: flex; justify-content: space-between; align-items: center; }
+       .header h1 { margin: 0; color: #fff; }
+       .header a { color: #b0b0c0; text-decoration: none; }
+       .container { max-width: 900px; margin: 2em auto; padding: 2em; background-color: #2a2a45; border-radius: 8px; }
+        h2, h3 { border-bottom: 1px solid #444; padding-bottom: 0.5em; }
+        input[type="file"] { background-color: #333; color: #fff; padding: 8px; border-radius: 4px; border: 1px solid #555; margin-bottom: 1em; }
+        input[type="submit"],.download-btn { background-color: #7a73ff; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1em; text-decoration: none; display: inline-block; }
+        input[type="submit"]:hover,.download-btn:hover { background-color: #625ad9; }
+       .result-box { background-color: #121212; border: 1px solid #444; padding: 1em; border-radius: 5px; margin-top: 1em; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; }
+       .error-box { background-color: #4d2828; border: 1px solid #995252; color: #ffc8c8; padding: 1em; border-radius: 5px; }
+       .success-box { background-color: #284d34; border: 1px solid #529966; color: #c8ffda; padding: 1em; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PDF Content & Action Analysis</h1>
+        <a href="/">← Back to Dashboard</a>
+    </div>
+    <div class="container">
+        <h2>Upload PDF</h2>
+        <form action="/analyze/pdf" method="post" enctype="multipart/form-data">
+          <p>Select a PDF file for detailed metadata and content analysis.</p>
+          <input type="file" name="pdf_file" accept="application/pdf" required>
+          <br>
+          <input type="submit" value="Analyze PDF">
+        </form>
+        
+        {% if pdf_result %}
+            <h2>Analysis Report</h2>
+
+            {% if pdf_result.error %}
+                <div class="error-box">{{ pdf_result.error }}</div>
+            {% else %}
+                <h3>ExifTool Metadata:</h3>
+                <div class="result-box"><pre>{{ pdf_result.exif_data }}</pre></div>
+
+                <h3>PDF Stream Scan:</h3>
+                <div class="result-box"><pre>{{ pdf_result.stream_scan_data }}</pre></div>
+                {% if pdf_result.object_dump_data %}
+                    <h3>PDF Object Dump:</h3>
+                    <div class="result-box"><pre>{{ pdf_result.object_dump_data }}</pre></div>
+                {% endif %}
+
+                {% if pdf_result.download_zip_path %}
+                    <h3>HTML Conversion:</h3>
+                    <a href="{{ pdf_result.download_zip_path }}" class="download-btn" download>Download HTML Export (.zip)</a>
+                {% endif %}
+
+                {% if pdf_result.pyscript_found %}
+                    <h3>PyScript Plugin Execution:</h3>
+                    <div class="success-box">
+                        <strong>Result:</strong> {{ pdf_result.exec_result }}
+                    </div>
+                {% endif %}
+
+            {% endif %}
+        {% endif %}
+    </div>
+</body>
+</html>
