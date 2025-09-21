@@ -6,8 +6,8 @@ import random
 import subprocess
 
 class Lunachef(Challenge):
-    flag_location = 'flags/poke.txt'
-    history_location = 'history/poke.txt'
+    flag_location = 'flags/lunachef.txt'
+    history_location = 'history/lunachef.txt'
 
     def distribute(self, flag):
         try:
@@ -25,27 +25,8 @@ class Lunachef(Challenge):
             return False
 
     def check(self):
-        pokemon_names = [
-            "pikachu", "bulbasaur", "charmander", "squirtle", "jigglypuff",
-            "meowth", "psyduck", "machop", "gastly", "krabby",
-            "mew", "charizard", "pidgey", "rattata", "vulpix",
-            "eevee", "snorlax", "magikarp", "growlithe", "abra"
-        ]
-
         try:
-            # Step 1: Randomize the Pokémon name
-            pokemon_name =  random.choice(pokemon_names)
-            url = f'http://localhost:{self.port}/'
-            data = {'pokemon_name': pokemon_name}
-            r = requests.post(url, data=data, timeout=5)
-            assert pokemon_name.lower() in r.text.lower(), 'Pokémon data not available'
-
-            # Step 2: Check if the image is available
-            image_url = f'http://localhost:{self.port}/?image={pokemon_name.lower()}.png'
-            r = requests.get(image_url, timeout=5)
-            assert r.status_code == 200 and 'image/png' in r.headers['Content-Type'], 'Pokémon image not available or incorrect content type'
-            
-            # Step 3: Check if the flag still exists and matches the one in the container
+            # Step 1: Check if the flag still exists and matches the one in the container
             with open(self.flag_location, 'r') as f:
                 host_flag = f.read().strip()
 
@@ -56,7 +37,7 @@ class Lunachef(Challenge):
             ).stdout.strip()
             
             assert host_flag == container_flag, 'Flag mismatch between host and container'
-
+            
             self.logger.info('Check passed for poke')
             return True
 

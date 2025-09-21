@@ -69,13 +69,12 @@ def verify_signature():
     try:
         data = request.form.get('data', '').strip()
         signature = request.form.get('signature', '').strip()
-        public_key = request.form.get('public_key', '').strip()
         
         if not all([data, signature]):
             return jsonify({'success': False, 'error': 'Data and signature are required'})
         
-        # Use public key if provided, otherwise use internal key
-        result = signing_service.verify(data, signature, public_key if public_key else None)
+        # Use the updated verify method with hex signature
+        result = signing_service.verify(signature, data)
         return jsonify(result)
     
     except Exception as e:

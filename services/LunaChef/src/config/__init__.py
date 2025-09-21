@@ -1,0 +1,1 @@
+key = b'1234567890abcdef'  # 16 bytes key for AES-128
