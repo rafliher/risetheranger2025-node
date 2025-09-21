@@ -1,5 +1,5 @@
 services:
-  tung_tung_tung_sahur:
+  JJ:
     container_name: web-Di-Laut-Kita-Jaya
     build: .
     ports:
