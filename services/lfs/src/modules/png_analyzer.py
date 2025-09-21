@@ -6,7 +6,7 @@ BLACKLIST_FILE = '/app/blacklists/eval_blacklist.txt'
 UPLOAD_FOLDER = '/app/uploads'
 MAX_FILE_SIZE = 1 * 1024 * 1024  
 PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n' 
-FLAG = open('flag.txt', 'r').read().strip()
+FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:

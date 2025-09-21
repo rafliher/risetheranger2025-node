@@ -9,6 +9,7 @@ BLACKLIST_FILE = '/app/blacklists/template_blacklist.txt'
 UPLOAD_FOLDER = '/app/uploads'
 MAX_FILE_SIZE = 10 * 1024 * 1024
 ALLOWED_EXTENSION = '.dd'
+FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:

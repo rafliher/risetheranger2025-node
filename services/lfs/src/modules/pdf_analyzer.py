@@ -14,6 +14,7 @@ UPLOAD_FOLDER = '/app/uploads'
 DOWNLOAD_FOLDER = '/app/static/downloads'  
 MAX_FILE_SIZE = 3 * 1024 * 1024
 PDF_SIGNATURE = b'%PDF-'
+FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:
