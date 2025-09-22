@@ -1,7 +1,6 @@
 # Use Python 3.11 slim image as base
 FROM python:3.11-slim
 
-
 ARG PASSWORD
 
 # Create ctfuser and set password
@@ -50,10 +49,8 @@ RUN chown -R ctfuser:ctfuser /app
 
 # Expose port
 EXPOSE 5000
+EXPOSE 22
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/ || exit 1
-
+USER ctfuser
 # Run the application
 CMD ["python", "main.py"]

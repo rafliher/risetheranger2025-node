@@ -1,25 +1,5 @@
-version: '3.1'
 
 services:
-  # --- poke ---
-  poke:
-    container_name: poke_container
-    hostname: poke
-    restart: always
-    build:
-      context: poke
-      args:
-        - PASSWORD=$PASSWORD_10000
-    volumes:
-      - ../receiver/flags/poke.txt:/flag.txt:ro
-      - ../utils/bashrc:/root/.bashrc:ro
-      - ../utils/preexec.sh:/root/.preexec.sh:ro
-    ports:
-      - "10000:80"
-      - "10022:22"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-
   c2:
     restart: always
     container_name: c2_container
@@ -42,12 +22,32 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
+  jj:
+    container_name: jj_container
+    hostname: jj
+    restart: always
+    build:
+      context: JJ
+      args:
+          - PASSWORD=$PASSWORD_12000
+    ports:
+      - "12000:8080"
+      - "12022:22"
+    volumes:
+      - ../receiver/flags/jj.txt:/flag.txt:ro
+      - ../utils/bashrc:/root/.bashrc:ro
+      - ../utils/preexec.sh:/root/.preexec.sh:ro
+    environment:
+      - FLAG=RTRTNI25{PLACEHOLDER}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   lovely-forensic-suite:
     container_name: lfs_container
     hostname: lfs
     restart: always
     build:
-      context: .
+      context: lfs
       args:
           - PASSWORD=$PASSWORD_13000
     ports:
@@ -60,3 +60,21 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     privileged: true
+
+  lunachef:
+    build:
+      context: LunaChef
+      dockerfile: Dockerfile
+      args:
+          - PASSWORD=$PASSWORD_14000
+    container_name: lunachef_container
+    hostname: lunachef
+    ports:
+      - "14000:5000"
+      - "14022:22"
+    volumes:
+      - ../receiver/flags/lunachef.txt:/flag.txt:ro
+      - ../utils/bashrc:/root/.bashrc:ro
+      - ../utils/preexec.sh:/root/.preexec.sh:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

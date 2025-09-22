@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   lunachef:
     build:
@@ -7,13 +5,8 @@ services:
       dockerfile: Dockerfile
       args:
           - PASSWORD=root
-    container_name: lunachef
+    container_name: lunachef_container
+    hostname: lunachef
     ports:
-      - "5000:5000"
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - "14000:5000"
+      - "14022:22"

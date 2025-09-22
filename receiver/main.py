@@ -5,7 +5,9 @@ from config import get_settings
 
 from challenges.Poke import Poke
 from challenges.C2 import C2
+from challenges.JJ import JJ
 from challenges.Lfs import Lfs
+from challenges.Lunachef import Lunachef
 
 import os
 
@@ -16,7 +18,9 @@ settings = get_settings()
 challenges = {
     "poke": Poke(10000),
     "c2": C2(11000),
+    "jj": JJ(12000),
     "lfs": Lfs(13000),
+    "lunachef": Lunachef(14000),
 }
 
 class Flag(BaseModel):
