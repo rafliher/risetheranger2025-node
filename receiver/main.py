@@ -4,6 +4,8 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from config import get_settings
 
 from challenges.Poke import Poke
+from challenges.C2 import C2
+from challenges.Lfs import Lfs
 
 import os
 
@@ -13,6 +15,8 @@ settings = get_settings()
 
 challenges = {
     "poke": Poke(10000),
+    "c2": C2(11000),
+    "lfs": Lfs(13000),
 }
 
 class Flag(BaseModel):
