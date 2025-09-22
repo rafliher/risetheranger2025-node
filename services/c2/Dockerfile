@@ -19,7 +19,7 @@ RUN apt-get update && \
     && rm -rf /var/lib/apt/lists/*
 
 # Create users needed for the challenge
-RUN useradd -m -d /home/c2user c2user && echo c2user:${PASSWORD} | chpasswd
+RUN useradd -m -d /home/ctfuser ctfuser && echo ctfuser:${PASSWORD} | chpasswd
 
 COPY src/ .
 
@@ -32,8 +32,8 @@ RUN cp /opt/tni_c2_system /usr/local/bin/tni_c2_system
 # Generate clearance token for the challenge
 RUN cd /opt && make token
 
-# Copy clearance token to c2user home directory (for checker)
-RUN cp /opt/clearance_token /home/c2user/clearance_token && chown c2user:c2user /home/c2user/clearance_token
+# Copy clearance token to ctfuser home directory (for checker)
+RUN cp /opt/clearance_token /home/ctfuser/clearance_token && chown ctfuser:ctfuser /home/ctfuser/clearance_token
 
 # Set basic permissions for the challenge
 RUN chmod 755 /opt && \
@@ -45,7 +45,7 @@ RUN chmod 755 /opt/tni_c2_system
 # Configure SSH for basic access
 RUN echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "PermitRootLogin no" >> /etc/ssh/sshd_config && \
-    echo "AllowUsers c2user" >> /etc/ssh/sshd_config && \
+    echo "AllowUsers ctfuser" >> /etc/ssh/sshd_config && \
     echo "PermitEmptyPasswords no" >> /etc/ssh/sshd_config
 
 # Start SSH service
