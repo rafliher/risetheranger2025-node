@@ -5,7 +5,7 @@ from config import get_settings
 
 from challenges.C2 import C2
 from challenges.JJ import JJ
-from challenges.Lfs import Lfs
+from challenges.Lfs import LFS
 from challenges.Lunachef import Lunachef
 
 import os
@@ -17,7 +17,7 @@ settings = get_settings()
 challenges = {
     "c2": C2(11000),
     "jj": JJ(12000),
-    "lfs": Lfs(13000),
+    "lfs": LFS(13000),
     "lunachef": Lunachef(14000),
 }
 
