@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     file \
     e2fsprogs \
     libimage-exiftool-perl \
+    nano openssh-server \
     pngcheck \
     poppler-utils \
     ntfs-3g \
