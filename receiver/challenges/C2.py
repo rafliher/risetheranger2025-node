@@ -1,4 +1,4 @@
-from .Challenge import Challenge
+from Challenge import Challenge
 
 import io
 import requests
@@ -30,7 +30,7 @@ class C2(Challenge):
         try:
             # Test format string vulnerability accessibility
             format_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="process %p.%p.%p.%p\nexit\n",
                 capture_output=True,
                 text=True
@@ -44,7 +44,7 @@ class C2(Challenge):
             # Test with input just under the limit to ensure functionality works
             normal_input = "A" * 100  # Under 128 limit
             buffer_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "15", "/usr/local/bin/tni_c2_system"],
                 input=f"officer\n{normal_input}\nTest\nexit\n",
                 capture_output=True,
                 text=True
@@ -56,7 +56,7 @@ class C2(Challenge):
                 
             # Test the new controlled heap vulnerability (input > 10 chars triggers malloc(32) with strcpy)
             heap_vuln_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="process " + "B" * 40 + "\nexit\n",  # 40 chars > 32 byte malloc buffer
                 capture_output=True,
                 text=True
@@ -85,7 +85,7 @@ class C2(Challenge):
             
             for test_input, expected_output in function_tests:
                 result = subprocess.run(
-                    ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                    ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                     input=test_input,
                     capture_output=True,
                     text=True
@@ -108,7 +108,7 @@ class C2(Challenge):
             # Test 1: Format string information disclosure - still works
             self.logger.info('Testing format string information disclosure...')
             format_disc_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="diagnostic\n%08x.%08x.%08x.%08x\nexit\n",
                 capture_output=True,
                 text=True
@@ -117,7 +117,7 @@ class C2(Challenge):
             # Test 2: Heap use-after-free behavior - still present
             self.logger.info('Testing heap use-after-free behavior...')
             uaf_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="classified\ntest_heap_data\nexit\n",
                 capture_output=True,
                 text=True
@@ -127,7 +127,7 @@ class C2(Challenge):
             self.logger.info('Testing controlled heap overflow...')
             heap_overflow_pattern = "A" * 50  # Larger than 32-byte malloc buffer
             heap_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "15", "/usr/local/bin/tni_c2_system"],
                 input=f"process {heap_overflow_pattern}\nexit\n",
                 capture_output=True,
                 text=True
@@ -138,7 +138,7 @@ class C2(Challenge):
             # Test with input under limit
             normal_net_input = "A" * 200  # Under 256 limit
             net_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input=f"network\n{normal_net_input}\nexit\n",
                 capture_output=True,
                 text=True
@@ -149,7 +149,7 @@ class C2(Challenge):
             # Test with input just under 128 bytes (should work)
             safe_input = "B" * 120
             safe_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input=f"process {safe_input}\nexit\n",
                 capture_output=True,
                 text=True
@@ -158,7 +158,7 @@ class C2(Challenge):
             # Test with input over 128 bytes (should be truncated but not crash)
             large_input = "C" * 200
             large_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input=f"process {large_input}\nexit\n",
                 capture_output=True,
                 text=True
@@ -167,7 +167,7 @@ class C2(Challenge):
             # Test 6: Shell access attempt (should be denied initially)
             self.logger.info('Testing shell access denial...')
             shell_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="shell\nexit\n",
                 capture_output=True,
                 text=True
@@ -188,7 +188,7 @@ class C2(Challenge):
                 host_flag = f.read().strip()
 
             container_flag = subprocess.run(
-                ["docker", "exec", "c2-system", "cat", "/flag.txt"],
+                ["docker", "exec", "c2_container", "cat", "/flag.txt"],
                 capture_output=True,
                 text=True
             ).stdout.strip()                    
@@ -199,7 +199,7 @@ class C2(Challenge):
 
             # Step 2: Check if can access binary via SSH
             ssh_check = subprocess.run(
-                ["docker", "exec", "c2-system", "test", "-f", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "test", "-f", "/usr/local/bin/tni_c2_system"],
                 capture_output=True,
                 text=True
             )
@@ -208,7 +208,7 @@ class C2(Challenge):
             
             # Step 3: Check if SSH service is accessible (port 15022)
             ssh_port_check = subprocess.run(
-                ["docker", "exec", "c2-system", "netstat", "-an"],
+                ["docker", "exec", "c2_container", "netstat", "-an"],
                 capture_output=True,
                 text=True
             )
@@ -217,7 +217,7 @@ class C2(Challenge):
             
             # Step 4: Check if the C2 binary is executable and responding
             binary_check = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "5", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "5", "/usr/local/bin/tni_c2_system"],
                 input="exit\n",
                 capture_output=True,
                 text=True
@@ -227,7 +227,7 @@ class C2(Challenge):
             
             # Step 5: Check if clearance token file exists (needed for exploitation)
             token_check = subprocess.run(
-                ["docker", "exec", "c2-system", "test", "-f", "/home/c2user/clearance_token"],
+                ["docker", "exec", "c2_container", "test", "-f", "/home/c2user/clearance_token"],
                 capture_output=True,
                 text=True
             )
@@ -236,7 +236,7 @@ class C2(Challenge):
             
             # Step 6: Test process_command function (format string vulnerability)
             process_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="process test_data\nexit\n",
                 capture_output=True,
                 text=True
@@ -247,7 +247,7 @@ class C2(Challenge):
             
             # Step 7: Test system_diagnostics function (format string vulnerability)
             diag_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="diagnostic\ntest_diag\nexit\n",
                 capture_output=True,
                 text=True
@@ -258,7 +258,7 @@ class C2(Challenge):
             
             # Step 8: Test manage_classified_data function (heap UAF vulnerability)
             classified_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="classified\ntest_classified_data\nexit\n",
                 capture_output=True,
                 text=True
@@ -269,7 +269,7 @@ class C2(Challenge):
             
             # Step 9: Test add_officer function (buffer overflow vulnerability)
             officer_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="officer\nTest Officer\nKapten\nexit\n",
                 capture_output=True,
                 text=True
@@ -280,7 +280,7 @@ class C2(Challenge):
             
             # Step 10: Test network_interface function (function pointer overwrite)
             network_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="network\ntest_packet\nexit\n",
                 capture_output=True,
                 text=True
@@ -291,7 +291,7 @@ class C2(Challenge):
             
             # Step 11: Test help command and command recognition
             help_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="help\nexit\n",
                 capture_output=True,
                 text=True
@@ -303,7 +303,7 @@ class C2(Challenge):
             # Step 12: Test controlled buffer handling (now has bounds checking)
             # Test with safe input size (should work correctly)
             safe_overflow_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "15", "/usr/local/bin/tni_c2_system"],
                 input="process " + "A" * 50 + "\nexit\n",
                 capture_output=True,
                 text=True
@@ -314,7 +314,7 @@ class C2(Challenge):
             
             # Step 13: Test new controlled heap vulnerability (malloc(32) with long input)
             heap_vuln_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "15", "/usr/local/bin/tni_c2_system"],
                 input="process " + "B" * 40 + "\nexit\n",  # Triggers malloc(32) with 40-char input
                 capture_output=True,
                 text=True
@@ -324,7 +324,7 @@ class C2(Challenge):
             
             # Step 14: Verify heap corruption issues are fixed (no more giant malloc)
             stability_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="process test1\nprocess test2\nprocess test3\nexit\n",
                 capture_output=True,
                 text=True
@@ -336,7 +336,7 @@ class C2(Challenge):
             
             # Step 15: Verify format string vulnerability is still exploitable
             format_exploit_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "timeout", "10", "/usr/local/bin/tni_c2_system"],
                 input="process %x.%x.%x\nexit\n",
                 capture_output=True,
                 text=True
@@ -365,3 +365,4 @@ class C2(Challenge):
         except Exception as e:
             self.logger.error(f'Could not check c2: {e}')
             return False
+        
