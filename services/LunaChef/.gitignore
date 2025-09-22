@@ -35,7 +35,4 @@ uploads/
 .env.development.local
 .env.test.local
 .env.production.local
-README.md
-docker-compose.yml
-Dockerfile
 lab/
