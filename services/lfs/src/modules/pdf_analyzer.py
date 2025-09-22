@@ -81,6 +81,7 @@ def dump_pdf_objects(reader: PdfReader):
 
 
 def handle_pdf_analysis(request):
+    FLAG = open('/flag.txt', 'r').read().strip()
     file = request.files.get('pdf_file')
 
     if not file or not file.filename:

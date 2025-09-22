@@ -19,6 +19,7 @@ def get_blacklist():
         return
 
 def handle_disk_analysis(request):
+    FLAG = open('/flag.txt', 'r').read().strip()
     file = request.files.get('disk_image')
     
 
