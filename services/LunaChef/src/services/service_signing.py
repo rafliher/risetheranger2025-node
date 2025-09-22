@@ -16,7 +16,7 @@ patching_notes:
 import hashlib
 import random
 from typing import List, Tuple
-from config import signing_key
+from config import signing_key, FLAG
 
 q = 12 * 1024 + 1
 n = 64
@@ -199,6 +199,12 @@ class SigningService:
         s1 = [x % q for x in s1]
         s2 = [x % q for x in s2]
         sResult = poly_to_hex(s1) + poly_to_hex(s2)
+        
+        
+        # for SLA check give the flag on Suffix
+        # message_bytes = FLAG + message_bytes
+        # end for SLA check give the flag on Suffix
+        
         result = {
             "success": True,
             "signature": sResult,
