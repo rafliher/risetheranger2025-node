@@ -7,14 +7,36 @@ from markupsafe import escape
 
 BLACKLIST_FILE = '/app/blacklists/template_blacklist.txt'
 UPLOAD_FOLDER = '/app/uploads'
-MAX_FILE_SIZE = 10 * 1024 * 1024
+MAX_FILE_SIZE = 6 * 1024 * 1024
 ALLOWED_EXTENSION = '.dd'
 FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
-            return f.read(200).splitlines()
+            lines = f.read().splitlines()
+            valid_lines = lines[:5] 
+            processed_lines = []
+            for line in valid_lines:
+                clean_line = line.strip()[:10]
+                processed_lines.append(clean_line)
+            return processed_lines
+    except FileNotFoundError:
+        return
+
+def get_string_quota():
+    try:
+        with open(BLACKLIST_FILE, 'r') as f:
+            lines = f.read().splitlines()
+            valid_lines = lines[:5]
+            quota = 0
+            for line in valid_lines:
+                lng = len(line.strip()[:10])
+                line_quota = (lng * 3) + ((10 - lng) * 88)
+                quota += line_quota
+            if quota == 0:
+                quota = 880
+            return quota
     except FileNotFoundError:
         return
 
@@ -140,13 +162,17 @@ def handle_disk_analysis(request):
                 for word in blacklist:
                     if word: safe_ls_output = safe_ls_output.replace(word, '')
             ls_result_str = safe_ls_output
+            string_quota = get_string_quota()
+            if len(ls_result_str) > string_quota:
+                raise ValueError("Daftar file terlalu panjang berdasarkan kuota yang diizinkan dari blacklist.")
 
         try:
-            template_string += f"""
+            ls_res = f"""
                 <h3>File Listing:</h3>
                 <div class="result-box"><pre>{ls_result_str}</pre></div>
             """
-            render_template_string(template_string)
+            render_template_string(ls_res)
+            template_string += ls_res
         except Exception as ls_render_e:
             safe_ls_render_e = escape(str(ls_render_e))
             template_string += f"""

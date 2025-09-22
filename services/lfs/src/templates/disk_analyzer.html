@@ -58,7 +58,7 @@
         <h2>Upload Image</h2>
         <form action="/analyze/disk" method="post" enctype="multipart/form-data">
           <p>Select a raw disk image (.dd) for filesystem analysis. Must be NTFS formatted.</p>
-          <input type="file" name="disk_image" required>
+          <input type="file" name="disk_image" accept=".dd" required>
           <br>
           <input type="submit" value="Generate Report">
         </form>
