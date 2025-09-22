@@ -16,7 +16,11 @@ class LFS(Challenge):
     """
     flag_location = 'flags/lfs.txt'
     history_location = 'history/lftd.txt'
-    payload_base_dir = '../payloads/lfs' # Base directory for test payloads
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Use absolute path to ensure payloads are found regardless of working directory
+        self.payload_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'payloads', 'lfs'))
 
     def distribute(self, flag):
         """Writes the current flag to the specified location for the service to use."""
@@ -88,7 +92,7 @@ class LFS(Challenge):
             
             assert response.status_code == 200, f"PDF analyzer returned status {response.status_code}"
             # UPDATED: Check for key text in the rendered HTML, not for a JSON response
-            assert "exif_data" in response.text, "PDF analyzer HTML response missing 'exif_data' key"
+            assert "ExifTool Metadata" in response.text, "PDF analyzer HTML response missing 'ExifTool Metadata' key"
             self.logger.info("  - PDF analyzer functionality: OK")
         except Exception as e:
             self.logger.error(f"PDF analyzer functionality test failed: {e}")
@@ -106,7 +110,7 @@ class LFS(Challenge):
 
             assert response.status_code == 200, f"PNG analyzer returned status {response.status_code}"
             # UPDATED: Check for key text in the rendered HTML, not for a JSON response
-            assert "pngcheck_data" in response.text, "PNG analyzer HTML response missing 'pngcheck_data' key"
+            assert "ExifTool Output" in response.text, "PNG analyzer HTML response missing 'ExifTool Output' key"
             self.logger.info("  - PNG analyzer functionality: OK")
         except Exception as e:
             self.logger.error(f"PNG analyzer functionality test failed: {e}")
@@ -134,6 +138,20 @@ class LFS(Challenge):
             # Step 3: Check if core features are working with benign payloads
             # This is crucial to prevent teams from breaking the service to "patch" it.
             assert self._test_feature_functionality(base_url), "Core feature functionality test failed."
+            
+            # Step 4: Check if the flag still exists and matches the one in the container
+            import subprocess
+            
+            with open(self.flag_location, 'r') as f:
+                host_flag = f.read().strip()
+
+            container_flag = subprocess.run(
+                ["docker", "exec", "lfs_container", "cat", "/flag.txt"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            
+            assert host_flag == container_flag, 'Flag mismatch between host and container'
             
             self.logger.info("LFS Challenge check passed successfully!")
             return True
