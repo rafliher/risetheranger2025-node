@@ -1,8 +1,14 @@
 services:
-  JJ:
-    container_name: web-Di-Laut-Kita-Jaya
-    build: .
+  jj:
+    container_name: jj_container
+    hostname: jj
+    restart: always
+    build:
+      context: .
+      args:
+          - PASSWORD=root
     ports:
-      - "33201:8080"
+      - "12000:8080"
+      - "12022:22"
     environment:
       - FLAG=RTR{fake_flag}

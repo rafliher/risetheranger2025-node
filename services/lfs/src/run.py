@@ -19,7 +19,7 @@ from modules.png_analyzer import handle_png_analysis
 # Inisialisasi aplikasi Flask
 app = Flask(__name__)
 
-FLAG = open('flag.txt', 'r').read().strip()
+FLAG = open('/flag.txt', 'r').read().strip()
 # Kunci rahasia diperlukan oleh Flask untuk mengelola sesi dan pesan flash.
 # Dalam aplikasi nyata, ini harus berupa string yang kompleks dan acak.
 app.secret_key = 'd43f8b1a9e7c2d5e6a1b9f0c8d7e6a5b'

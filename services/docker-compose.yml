@@ -20,8 +20,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-      version: "3"
-
+  c2:
     restart: always
     container_name: c2_container
     hostname: c2
@@ -43,4 +42,21 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  # --- poke ---
+  lovely-forensic-suite:
+    container_name: lfs_container
+    hostname: lfs
+    restart: always
+    build:
+      context: .
+      args:
+          - PASSWORD=$PASSWORD_13000
+    ports:
+      - "13000:5000"
+      - "13022:22"
+    volumes:
+      - ../receiver/flags/lfs.txt:/flag.txt:ro
+      - ../utils/bashrc:/root/.bashrc:ro
+      - ../utils/preexec.sh:/root/.preexec.sh:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    privileged: true

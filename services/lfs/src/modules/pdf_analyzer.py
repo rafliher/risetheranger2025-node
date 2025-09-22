@@ -14,6 +14,7 @@ UPLOAD_FOLDER = '/app/uploads'
 DOWNLOAD_FOLDER = '/app/static/downloads'  
 MAX_FILE_SIZE = 3 * 1024 * 1024
 PDF_SIGNATURE = b'%PDF-'
+FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:
@@ -80,6 +81,7 @@ def dump_pdf_objects(reader: PdfReader):
 
 
 def handle_pdf_analysis(request):
+    FLAG = open('/flag.txt', 'r').read().strip()
     file = request.files.get('pdf_file')
 
     if not file or not file.filename:
