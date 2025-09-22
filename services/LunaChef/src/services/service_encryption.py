@@ -1,5 +1,16 @@
 """
 Encryption Service
+
+patching_notes:
+- keep this line: 
+    from config import key
+    encryption_service = EncryptionService()
+- keep class base structure and methods:
+    class EncryptionService:
+    def encrypt(self, message: str) -> dict:
+    def decrypt(self, encrypted_data: str) -> dict:
+- dont change structure or remote config.py (you can change the values)
+- dont change features on application
 """
 
 from base64 import b64encode, b64decode

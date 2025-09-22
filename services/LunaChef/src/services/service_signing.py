@@ -1,17 +1,26 @@
-# junk.py
-# Toy "full" Falcon-like implementation with real polynomial inverse mod (x^n+1, q)
-# NOT CRYPTOGRAPHICALLY SECURE. Educational/demo only.
+"""
+Signing Service
+
+patching_notes:
+- keep this line: 
+    from config import signing_key
+    signing_service = SigningService()
+- keep class base structure and methods:
+    class SigningService:
+    def sign(self, message: bytes) -> Tuple[List[int], List[int]]:
+    def verify(self, signature, message) -> bool:
+- dont change structure or remote config.py (you can change the values)
+- dont change features on application
+"""
+
 import hashlib
 import random
 from typing import List, Tuple
+from config import signing_key
 
-# Parameters
-q = 12 * 1024 + 1   # 12289
+q = 12 * 1024 + 1
 n = 64
 
-# -----------------------
-# Basic poly helpers (coeff vectors length variable; index 0 is const term)
-# -----------------------
 def trim(p: List[int]) -> List[int]:
     while len(p) > 1 and p[-1] % q == 0:
         p.pop()
@@ -46,7 +55,6 @@ def mul_plain(a: List[int], b: List[int]) -> List[int]:
     return trim(res)
 
 def negacyclic_reduce_coeffs(poly_long: List[int], n_local: int) -> List[int]:
-    # reduce modulo x^n + 1: x^n ≡ -1
     res = [0] * n_local
     for idx, coeff in enumerate(poly_long):
         c = coeff % q
@@ -58,13 +66,9 @@ def negacyclic_reduce_coeffs(poly_long: List[int], n_local: int) -> List[int]:
     return [x % q for x in res]
 
 def negacyclic_mul(a: List[int], b: List[int]) -> List[int]:
-    # naive convolution then reduce by x^n + 1
     long = mul_plain(a, b)
     return negacyclic_reduce_coeffs(long, n)
 
-# -----------------------
-# Integer modular inverse
-# -----------------------
 def modinv_int(a: int, m: int) -> int:
     a = a % m
     if a == 0:
@@ -79,10 +83,6 @@ def modinv_int(a: int, m: int) -> int:
         raise ValueError("no inverse")
     return t0 % m
 
-# -----------------------
-# Polynomial division a // b over Z_q (plain polynomials, not mod x^n+1)
-# Returns (quotient, remainder)
-# -----------------------
 def poly_divmod(a: List[int], b: List[int]) -> Tuple[List[int], List[int]]:
     a = [x % q for x in a.copy()]
     b = [x % q for x in b.copy()]
@@ -102,26 +102,19 @@ def poly_divmod(a: List[int], b: List[int]) -> Tuple[List[int], List[int]]:
         coeff = (rem[-1] * inv_lc_b) % q
         pos = deg_r - deg_b
         quotient[pos] = coeff
-        # rem = rem - coeff * x^pos * b
         for i in range(len(b)):
             rem[pos + i] = (rem[pos + i] - coeff * b[i]) % q
         rem = trim(rem)
     return trim(quotient), trim(rem)
 
-# -----------------------
-# Extended Euclidean for polynomials over Z_q
-# returns (g, s, t) with s*a + t*b = g
-# -----------------------
 def poly_gcd_ext(a: List[int], b: List[int]) -> Tuple[List[int], List[int], List[int]]:
     a = [x % q for x in a.copy()]; b = [x % q for x in b.copy()]
     a = trim(a); b = trim(b)
-    # initialize
     r0, r1 = a, b
     s0, s1 = [1], [0]
     t0, t1 = [0], [1]
     while not (len(r1) == 1 and r1[0] == 0):
         q_poly, r2 = poly_divmod(r0, r1)
-        # s2 = s0 - q_poly * s1
         s2 = poly_sub(s0, mul_plain(q_poly, s1))
         t2 = poly_sub(t0, mul_plain(q_poly, t1))
         r0, r1 = r1, r2
@@ -129,12 +122,7 @@ def poly_gcd_ext(a: List[int], b: List[int]) -> Tuple[List[int], List[int], List
         t0, t1 = t1, t2
     return trim(r0), trim(s0), trim(t0)
 
-# -----------------------
-# Inverse of f modulo (x^n + 1, q)
-# If gcd(f, x^n+1) = c (constant), then inverse exists as s * c^{-1}
-# -----------------------
 def poly_inv_mod_xn1(f_poly: List[int]) -> List[int]:
-    # modulus m(x) = x^n + 1
     m = [0] * (n + 1)
     m[0] = 1
     m[-1] = 1
@@ -144,14 +132,9 @@ def poly_inv_mod_xn1(f_poly: List[int]) -> List[int]:
         raise ValueError("gcd degree > 0, no inverse modulo x^n+1")
     c = g[0] % q
     inv_c = modinv_int(c, q)
-    # s * inv_c is the inverse (mod m)
     inv = [ (coeff * inv_c) % q for coeff in s ]
-    # reduce inv modulo x^n + 1 (negacyclic reduction)
     return negacyclic_reduce_coeffs(inv, n)
 
-# -----------------------
-# Hash -> polynomial
-# -----------------------
 def hash_to_poly(msg: bytes) -> List[int]:
     out = []
     ctr = 0
@@ -179,9 +162,6 @@ def hex_to_poly(hs):
     return [int(hs[i:i+4], 16) for i in range(0, len(hs), 4)]
 
 
-# -----------------------
-# Keygen / Sign / Verify
-# -----------------------
 class SigningService:
     def __init__(self, small_bound: int = 4):
         self.small_bound = small_bound
@@ -196,33 +176,24 @@ class SigningService:
         tries = 0
         while True:
             tries += 1
-            # f should be invertible modulo (x^n+1,q). Choose random small-ish f with odd constant
             f_candidate = [random.randint(1, q-1) for _ in range(n)]
-            # make f coefficients small-ish? it's okay to be random
             try:
                 inv_f = poly_inv_mod_xn1(f_candidate)
             except Exception:
                 continue
-            # g small
             g_candidate = sample_small_poly(self.small_bound)
-            # compute h = g * f^{-1} mod (x^n+1, q)
             h_candidate = negacyclic_mul(g_candidate, inv_f)
-            # accept
             self.f = [x % q for x in f_candidate]
             self.g = [x % q for x in g_candidate]
             self.F = sample_small_poly(self.small_bound)
             self.G = sample_small_poly(self.small_bound)
             self.h = [x % q for x in h_candidate]
-            # done
             break
 
     def sign(self, message: bytes) -> Tuple[List[int], List[int]]:
-        # m polynomial
         message = message.encode()
         m = hash_to_poly(message)
-        # sample small s2 (in real Falcon: sample via trapdoor Gaussian)
         s2 = sample_small_poly(self.small_bound)
-        # s1 = m - s2 * h  (mod x^n+1, q)
         s2h = negacyclic_mul(s2, self.h)
         s1 = poly_sub(m, s2h)
         s1 = [x % q for x in s1]
