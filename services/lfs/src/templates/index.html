@@ -1,41 +1,158 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Lovely Forensic Suite</title>
+    <title>Lovely Forensic Suite - Analisis Forensik Digital Modern</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #1e1e2f; color: #e0e0e0; }
-       .header { background-color: #2a2a45; padding: 1em 2em; border-bottom: 2px solid #7a73ff; }
-       .header h1 { margin: 0; color: #fff; }
-       .container { padding: 2em; }
-       .dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5em; }
-       .tool-card { background-color: #2a2a45; border-radius: 8px; padding: 1.5em; text-decoration: none; color: #e0e0e0; transition: transform 0.2s ease, box-shadow 0.2s ease; border-left: 4px solid transparent; }
-       .tool-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); border-left-color: #7a73ff; }
-       .tool-card h2 { margin-top: 0; color: #fff; }
-       .tool-card p { color: #b0b0c0; line-height: 1.6; }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #020617; /* slate-950 */
+            background-image:
+                linear-gradient(rgba(0, 188, 212, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 188, 212, 0.08) 1px, transparent 1px);
+            background-size: 2.5rem 2.5rem;
+            background-attachment: fixed;
+        }
+        .text-glow {
+            text-shadow: 0 0 8px rgba(34, 211, 238, 0.7), 0 0 20px rgba(34, 211, 238, 0.5);
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.4);
+        }
     </style>
 </head>
-<body>
-    <div class="header">
-        <h1>Lovely Forensic Suite</h1>
-    </div>
-    <div class="container">
-        <h2>Analysis Dashboard</h2>
-        <div class="dashboard-grid">
-            <a href="/disk" class="tool-card">
-                <h2>Disk Image Triage</h2>
-                <p>Performs a quick filesystem triage to list contents of a raw disk image. Useful for initial assessment of removable media.</p>
-            </a>
-            <a href="/pdf" class="tool-card">
-                <h2>PDF Content & Action Analysis</h2>
-                <p>Extracts textual content and analyzes embedded document actions for potential scripts. Ideal for examining suspicious documents.</p>
-            </a>
-            <a href="/png" class="tool-card">
-                <h2>PNG Metadata Inspector</h2>
-                <p>Displays core image metadata and renders custom text-based annotations found within the image data structure.</p>
-            </a>
+<body class="text-slate-300 antialiased">
+    <audio src="{{ url_for('static', filename='bgm.mp3') }}" autoplay loop></audio>
+
+    <nav class="sticky top-0 z-50 px-6 py-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="#" class="text-xl font-bold text-cyan-400">LFS</a>
+            <div class="hidden md:flex space-x-8 items-center">
+                <a href="#fitur" class="hover:text-cyan-400 transition-colors">Fitur</a>
+                <a href="#alur-kerja" class="hover:text-cyan-400 transition-colors">Alur Kerja</a>
+                <a href="#misi" class="hover:text-cyan-400 transition-colors">Misi Kami</a>
+            </div>
+            <a href="#" class="px-4 py-2 text-sm font-semibold border border-cyan-400 text-cyan-400 rounded-md hover:bg-cyan-400 hover:text-slate-900 transition-all btn-glow">Mulai Analisis</a>
         </div>
-    </div>
+    </nav>
+
+    <header class="relative min-h-screen flex items-center justify-center text-center overflow-hidden px-4">
+        <div class="z-10">
+            <h1 class="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-white mb-4">
+                Analisis Forensik Digital,
+                <span class="block text-cyan-400 text-glow">Dalam Satu Alat.</span>
+            </h1>
+            <p class="max-w-2xl mx-auto mt-6 text-lg text-slate-400">
+                Suite alat bantu canggih yang dirancang untuk mempercepat investigasi Anda, dari triase disk hingga analisis malware dokumen.
+            </p>
+            <div class="mt-10">
+                <a href="#fitur" class="px-8 py-4 bg-cyan-500 text-slate-900 font-bold rounded-lg hover:bg-cyan-400 transition-all btn-glow">
+                    Jelajahi Fitur
+                </a>
+            </div>
+        </div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950 z-0"></div>
+    </header>
+
+    <main class="container mx-auto px-6">
+
+        <section id="fitur" class="py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4 text-white">Toolkit Intuitif Kami</h2>
+            <p class="text-center max-w-xl mx-auto mb-16 text-slate-400">Tiga pilar utama untuk membantu Anda mengungkap kebenaran digital dengan cepat dan akurat.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <a href="/disk" class="group block p-8 rounded-xl border transition-all duration-300 bg-slate-800/50 backdrop-blur-sm border-cyan-400/20 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 hover:-translate-y-2">
+                    <h3 class="text-xl font-bold text-white mb-2">Disk Image Triage</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Performs a quick filesystem triage to list contents of a raw disk image. Useful for initial assessment of removable media.</p>
+                </a>
+                
+                <a href="/pdf" class="group block p-8 rounded-xl border transition-all duration-300 bg-slate-800/50 backdrop-blur-sm border-cyan-400/20 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 hover:-translate-y-2">
+                    <h3 class="text-xl font-bold text-white mb-2">PDF Content Analysis</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Extracts textual content and analyzes embedded document actions for potential scripts. Ideal for examining suspicious documents.</p>
+                </a>
+
+                <a href="/png" class="group block p-8 rounded-xl border transition-all duration-300 bg-slate-800/50 backdrop-blur-sm border-cyan-400/20 hover:border-cyan-400 hover:shadow-2xl hover:shadow-cyan-500/20 hover:-translate-y-2">
+                    <h3 class="text-xl font-bold text-white mb-2">PNG Metadata Inspector</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Displays core image metadata and renders custom text-based annotations found within the image data structure.</p>
+                </a>
+            </div>
+        </section>
+
+        <section id="alur-kerja" class="py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-white">Alur Kerja Cepat & Efisien</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
+                <div class="flex flex-col items-center">
+                    <div class="flex items-center justify-center w-20 h-20 mb-6 border-2 border-cyan-400 rounded-full text-cyan-400 text-2xl font-bold text-glow">1</div>
+                    <h3 class="text-xl font-semibold mb-2 text-white">Unggah Bukti</h3>
+                    <p class="text-slate-400">Seret dan lepas file bukti digital Anda—apakah itu disk image, dokumen mencurigakan, atau file media.</p>
+                </div>
+                <div class="flex flex-col items-center">
+                     <div class="flex items-center justify-center w-20 h-20 mb-6 border-2 border-cyan-400 rounded-full text-cyan-400 text-2xl font-bold text-glow">2</div>
+                    <h3 class="text-xl font-semibold mb-2 text-white">Proses Otomatis</h3>
+                    <p class="text-slate-400">Sistem kami melakukan analisis mendalam, mengekstrak artefak penting, dan menandai potensi ancaman.</p>
+                </div>
+                <div class="flex flex-col items-center">
+                     <div class="flex items-center justify-center w-20 h-20 mb-6 border-2 border-cyan-400 rounded-full text-cyan-400 text-2xl font-bold text-glow">3</div>
+                    <h3 class="text-xl font-semibold mb-2 text-white">Dapatkan Laporan</h3>
+                    <p class="text-slate-400">Terima laporan terstruktur yang mudah dipahami, lengkap dengan temuan kunci dan metadata relevan.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="misi" class="py-24">
+            <div class="max-w-3xl mx-auto text-center p-12 bg-slate-900 rounded-2xl border border-slate-800">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 text-white">Misi Kami</h2>
+                <p class="text-slate-400 leading-relaxed">
+                    Kami percaya bahwa setiap analis keamanan siber dan investigator forensik berhak mendapatkan alat yang tidak hanya kuat, tetapi juga intuitif dan cepat. Lovely Forensic Suite lahir dari kebutuhan untuk menjembatani kesenjangan antara analisis kompleks dan kecepatan pengambilan keputusan di lapangan.
+                </p>
+            </div>
+        </section>
+        
+        <section id="testimoni" class="py-24">
+            <h2 class="text-3xl md:text-4xl font-bold text-center mb-16 text-white">Apa Kata Para Profesional</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <div class="p-8 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-800">
+                    <p class="text-slate-300 mb-4">"LFS mengubah cara tim kami melakukan triase awal. Sangat cepat dan hasilnya akurat. Waktu respons kami berkurang drastis."</p>
+                    <footer class="font-semibold text-cyan-400">— Andi P., Lead Incident Responder</footer>
+                </div>
+                <div class="p-8 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-800">
+                    <p class="text-slate-300 mb-4">"Fitur analisis PDF-nya luar biasa. Berhasil menemukan skrip berbahaya yang terlewat oleh beberapa alat komersial lain."</p>
+                    <footer class="font-semibold text-cyan-400">— Citra W., DFIR Analyst</footer>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-24 text-center">
+            <h2 class="text-4xl font-bold mb-4 text-white">Siap Merevolusi Investigasi Anda?</h2>
+            <p class="max-w-xl mx-auto mb-8 text-slate-400">Mulai gunakan LFS sekarang dan rasakan kecepatan analisis di ujung jari Anda.</p>
+            <a href="#" class="px-8 py-4 bg-cyan-500 text-slate-900 font-bold rounded-lg hover:bg-cyan-400 transition-all btn-glow">
+                Coba Versi Demo
+            </a>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 bg-slate-900">
+        <div class="container mx-auto px-6 py-8 text-center text-slate-500">
+            <p>&copy; 2025 Lovely Forensic Suite. All Rights Reserved.</p>
+            <div class="flex justify-center space-x-6 mt-4">
+                <a href="#" class="hover:text-cyan-400 transition-colors">Twitter</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">LinkedIn</a>
+                <a href="#" class="hover:text-cyan-400 transition-colors">GitHub</a>
+            </div>
+        </div>
+    </footer>
+
 </body>
 </html>

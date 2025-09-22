@@ -72,15 +72,15 @@ def handle_disk_analysis(request):
 
             safe_exif_data = escape(exif_data)
             template_string += f"""
-                <h3>ExifTool Metadata:</h3>
-                <div class="result-box"><pre>{safe_exif_data}</pre></div>
+                <h3 class="text-2xl font-bold text-white mt-8 mb-4">ExifTool Metadata:</h3>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">{safe_exif_data}</pre>
             """
             render_template_string(template_string)
         except Exception as exif_e:
             safe_exif_e = escape(str(exif_e))
             template_string += f"""
-                <h3>ExifTool Metadata:</h3>
-                <div class="result-box"><pre>Gagal menjalankan ExifTool: {safe_exif_e}</pre></div>
+                <h3 class="text-2xl font-bold text-white mt-8 mb-4">ExifTool Metadata:</h3>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Gagal menjalankan ExifTool: {safe_exif_e}</pre>
             """
 
         partition_info_str = ""
@@ -143,15 +143,15 @@ def handle_disk_analysis(request):
         try:
             safe_partition_info = escape(partition_info_str)
             template_string += f"""
-                <h3>Partition Information:</h3>
-                <div class="result-box"><pre>{safe_partition_info}</pre></div>
+                <h3 class="text-2xl font-bold text-white mt-8 mb-4">Partition Information:</h3>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">{safe_partition_info}</pre>
             """
             render_template_string(template_string)
         except Exception as partition_render_e:
             safe_partition_render_e = escape(str(partition_render_e))
             template_string += f"""
-                <h3>Partition Information:</h3>
-                <div class="result-box"><pre>Gagal me-render informasi partisi: {safe_partition_render_e}</pre></div>
+                <h3 class="text-2xl font-bold text-white mt-8 mb-4">Partition Information:</h3>
+                <pre>Gagal me-render informasi partisi: {safe_partition_render_e}</pre><
             """
 
         
@@ -168,16 +168,16 @@ def handle_disk_analysis(request):
 
         try:
             ls_res = f"""
-                <h3>File Listing:</h3>
-                <div class="result-box"><pre>{ls_result_str}</pre></div>
+                <h3 class="text-2xl font-bold text-white mt-8 mb-4">File Listing:</h3>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">{ls_result_str}</pre>
             """
             render_template_string(ls_res)
             template_string += ls_res
         except Exception as ls_render_e:
             safe_ls_render_e = escape(str(ls_render_e))
             template_string += f"""
-                <h3>File Listing:</h3>
-                <div class="result-box"><pre>Gagal me-render daftar file: {safe_ls_render_e}</pre></div>
+                <h3 class="text-2xl font-bold text-white mt-8 mb-4">File Listing:</h3>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Gagal me-render daftar file: {safe_ls_render_e}</pre>
             """
 
         try:
