@@ -51,7 +51,8 @@ RUN ssh-keygen -A
 RUN mkdir -p /run/sshd && chmod 755 /run/sshd
 
 # Create the main flag file
-RUN touch /flag.txt && chown root:root /flag.txt && chmod 644 /flag.txt
+COPY flag.txt /flag.txt
+RUN chown root:root /flag.txt && chmod 644 /flag.txt
 
 USER ctfuser
 

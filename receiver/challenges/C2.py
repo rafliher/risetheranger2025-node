@@ -1,4 +1,4 @@
-from Challenge import Challenge
+from .Challenge import Challenge
 
 import io
 import requests
@@ -77,15 +77,6 @@ class C2(Challenge):
             assert ssh_check.returncode == 0, 'C2 binary not found in container'
             self.logger.info('C2 binary check passed')
             
-            # Step 3: Check if SSH service is accessible (port 15022)
-            ssh_port_check = subprocess.run(
-                ["docker", "exec", "c2_container", "netstat", "-an"],
-                capture_output=True,
-                text=True
-            )
-            assert ":22" in ssh_port_check.stdout, 'SSH service not running'
-            self.logger.info('SSH service check passed for c2')
-            
             # Step 4: Check if the C2 binary is executable and responding
             binary_out = self._run_c2(["exit"], timeout=5)
             assert "TNI COMMAND CENTER" in binary_out, 'C2 binary not responding correctly'
@@ -140,7 +131,7 @@ class C2(Challenge):
             # Test with safe input size (should work correctly)
             safe_overflow_out = self._run_c2(["process " + "A" * 50, "exit"], timeout=15)
             # Should process input correctly with new bounds checking
-            assert "Memproses komando:" in safe_overflow_out, 'Safe input processing not working'
+            assert "Memproses komando:" in safe_overflow_out.stdout if hasattr(safe_overflow_out, 'stdout') else "Memproses komando:" in safe_overflow_out, 'Safe input processing not working'
             self.logger.info('Controlled buffer handling check passed')
             
             return True

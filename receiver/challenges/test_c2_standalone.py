@@ -35,7 +35,7 @@ def run_c2(commands, timeout=10):
 def check():
     try:
         # Step 1: Check if the flag still exists and matches the one in the container
-        with open('../services/c2/flag.txt', 'r') as f:
+        with open('../flags/c2.txt', 'r') as f:
             host_flag = f.read().strip()
 
         container_flag = subprocess.run(

@@ -59,7 +59,14 @@ RUN touch /flag.txt && chown root:root /flag.txt && chmod 644 /flag.txt
 RUN chmod +x ./start_service.sh
 RUN chmod +x ./tni_c2_system
 
-CMD ./start_service.sh
+# Create a startup script that starts SSH as root then switches to ctfuser
+RUN echo '#!/bin/bash\n\
+service ssh start\n\
+su - ctfuser -c "cd /opt && ./start_service.sh"' > /opt/docker_start.sh && chmod +x /opt/docker_start.sh
+
+# Switch back to root for SSH service management, then run startup script
+USER root
+CMD ["/opt/docker_start.sh"]
 
 EXPOSE 8000
 EXPOSE 22
