@@ -1,6 +1,7 @@
 services:
   JJ:
-    container_name: web-Di-Laut-Kita-Jaya
+    container_name: jj_container
+    hostname: jj
     build: .
     ports:
       - "33201:8080"
