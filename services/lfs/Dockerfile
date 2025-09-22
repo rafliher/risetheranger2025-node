@@ -36,8 +36,6 @@ COPY src/ .
 # Langkah 7: Buat direktori yang akan digunakan oleh aplikasi
 RUN mkdir -p /app/uploads /mnt
 
-
-
 # Langkah 8: Buat user non-root untuk keamanan
 RUN useradd -m -d /home/ctfuser ctfuser && echo ctfuser:${PASSWORD} | chpasswd
 RUN chown -R ctfuser:ctfuser /app/uploads /mnt /app/static
