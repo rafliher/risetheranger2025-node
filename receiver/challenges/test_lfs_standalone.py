@@ -13,7 +13,7 @@ def check():
     """Main check function that runs all tests - matches Lfs.py logic exactly"""
     try:
         base_url = 'http://localhost:13000'
-        payload_base_dir = 'payloads/lfs'
+        payload_base_dir = '../payloads/lfs'
         
         # Step 1: Check if the website is up at all
         print(f"Pinging service at {base_url}...")
@@ -56,7 +56,7 @@ def check():
             response = requests.post(pdf_url, files=files, timeout=15)
         
         assert response.status_code == 200, f"PDF analyzer returned status {response.status_code}"
-        assert "exif_data" in response.text, "PDF analyzer HTML response missing 'exif_data' key"
+        assert "ExifTool Metadata" in response.text, "PDF analyzer HTML response missing 'exif_data' key"
         print("  - PDF analyzer functionality: OK")
 
         # Test 3: PNG Analyzer
@@ -68,13 +68,13 @@ def check():
             response = requests.post(png_url, files=files, timeout=15)
 
         assert response.status_code == 200, f"PNG analyzer returned status {response.status_code}"
-        assert "pngcheck_data" in response.text, "PNG analyzer HTML response missing 'pngcheck_data' key"
+        assert "ExifTool Output" in response.text, "PNG analyzer HTML response missing 'pngcheck_data' key"
         print("  - PNG analyzer functionality: OK")
         
         print("All feature functionality checks passed.")
 
         # Step 4: Check if the flag still exists and matches the one in the container
-        with open('flags/lfs.txt', 'r') as f:
+        with open('../flags/lfs.txt', 'r') as f:
             host_flag = f.read().strip()
 
         container_flag = subprocess.run(
@@ -82,6 +82,9 @@ def check():
             capture_output=True,
             text=True
         ).stdout.strip()
+
+        print(f"Host flag: {host_flag}")
+        print(f"Container flag: {container_flag}")
         
         assert host_flag == container_flag, 'Flag mismatch between host and container'
 
