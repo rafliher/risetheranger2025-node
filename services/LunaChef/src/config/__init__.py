@@ -1,1 +1,3 @@
-key = b'1234567890abcdef'  # 16 bytes key for AES-128
+key = b'1234567890abcdef'
+signing_key = []
+hash_key = b'secure_hash_key' 

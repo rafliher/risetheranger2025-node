@@ -47,6 +47,9 @@ COPY src/ .
 
 RUN chown -R ctfuser:ctfuser /app
 
+COPY flag.txt /flag.txt
+RUN chown root:root /flag.txt && chmod 644 /flag.txt
+
 # Expose port
 EXPOSE 5000
 EXPOSE 22
