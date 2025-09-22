@@ -18,7 +18,7 @@ DEBUG_FLAGS = -g                     # Include debug symbols
 DEBUG_FLAGS += -O0                   # No optimization
 
 # Additional flags for maximum vulnerability
-EXPLOIT_FLAGS = -m32                 # 32-bit for easier exploitation (comment out for 64-bit)
+# EXPLOIT_FLAGS = -m32                 # 32-bit for easier exploitation (comment out for 64-bit)
 # EXPLOIT_FLAGS += -static           # Static linking (uncomment for ret2dlresolve)
 
 # Warning suppression (don't warn about dangerous functions)
@@ -39,14 +39,14 @@ static:
 
 # Maximum vulnerability version
 max_vuln:
-	$(CC) -fno-stack-protector -no-pie -fno-pic -z execstack -z norelro -Wl,-z,lazy -g -O0 -m32 -w -o $(TARGET) $(SOURCE) -ldl
+	$(CC) -fno-stack-protector -no-pie -fno-pic -z execstack -z norelro -Wl,-z,lazy -g -O0 -w -o $(TARGET) $(SOURCE) -ldl
 
 clean:
 	rm -f $(TARGET)
 
 # Generate clearance token for the challenge
 token:
-	echo "TNI_C2_CLEARANCE_$(shell date +%s)" > clearance_token
+	echo "$(shell date +%s)" > clearance_token
 
 # Show security features of compiled binary
 check:

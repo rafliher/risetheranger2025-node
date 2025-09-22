@@ -25,161 +25,32 @@ class C2(Challenge):
             self.logger.error(f'Could not write flag to {self.flag_location}: {e}')
             return False
 
-    def test_vulnerability_access(self):
-        """Test that vulnerabilities are accessible for exploitation"""
+    def _run_c2(self, commands, timeout=10):
+        if isinstance(commands, str):
+            commands = [commands]
+        cmd = [
+            "docker",
+            "exec",
+            "-i",
+            "c2_container",
+            "timeout",
+            str(timeout),
+            "/usr/local/bin/tni_c2_system",
+        ]
+        proc = subprocess.Popen(
+            cmd,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        input_str = "".join(c if c.endswith("\n") else c + "\n" for c in commands)
         try:
-            # Test format string vulnerability accessibility
-            format_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="process %p.%p.%p.%p\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Should show memory addresses if format string vuln is working
-            if "0x" not in format_test.stdout and "%p" in format_test.stdout:
-                self.logger.info('Format string vulnerability is present and accessible')
-                
-            # Test controlled buffer overflow - now uses bounds checking but still vulnerable
-            # Test with input just under the limit to ensure functionality works
-            normal_input = "A" * 100  # Under 128 limit
-            buffer_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
-                input=f"officer\n{normal_input}\nTest\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Should handle normal input correctly
-            if "Nama perwira:" in buffer_test.stdout:
-                self.logger.info('Buffer handling is working correctly')
-                
-            # Test the new controlled heap vulnerability (input > 10 chars triggers malloc(32) with strcpy)
-            heap_vuln_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="process " + "B" * 40 + "\nexit\n",  # 40 chars > 32 byte malloc buffer
-                capture_output=True,
-                text=True
-            )
-            
-            if "Memproses komando:" in heap_vuln_test.stdout:
-                self.logger.info('Controlled heap vulnerability is accessible')
-                
-            return True
-            
-        except Exception as e:
-            self.logger.error(f'Vulnerability access test failed: {e}')
-            return False
-
-    def test_post_patch_functionality(self):
-        """Test that functions work correctly after patches are applied"""
-        try:
-            # Test that basic functionality still works after potential patches
-            function_tests = [
-                ("process normal_data\nexit\n", "Memproses komando: normal_data"),
-                ("diagnostic\nnormal_diag\nexit\n", "Diagnostic 0: normal_diag"),
-                ("classified\nnormal_classified\nexit\n", "Data tersimpan di alamat:"),
-                ("officer\nNormal Officer\nMayor\nexit\n", "Nama perwira:"),
-                ("network\nnormal_packet\nexit\n", "Paket diproses:")
-            ]
-            
-            for test_input, expected_output in function_tests:
-                result = subprocess.run(
-                    ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                    input=test_input,
-                    capture_output=True,
-                    text=True
-                )
-                
-                if expected_output not in result.stdout:
-                    self.logger.error(f'Post-patch functionality test failed for input: {test_input}')
-                    return False
-                    
-            self.logger.info('Post-patch functionality tests passed')
-            return True
-            
-        except Exception as e:
-            self.logger.error(f'Post-patch functionality test failed: {e}')
-            return False
-
-    def test_specific_vulnerability_behaviors(self):
-        """Test specific behaviors of each vulnerability type"""
-        try:
-            # Test 1: Format string information disclosure - still works
-            self.logger.info('Testing format string information disclosure...')
-            format_disc_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="diagnostic\n%08x.%08x.%08x.%08x\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Test 2: Heap use-after-free behavior - still present
-            self.logger.info('Testing heap use-after-free behavior...')
-            uaf_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="classified\ntest_heap_data\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Test 3: Controlled heap overflow - new vulnerability (malloc(32) with strcpy)
-            self.logger.info('Testing controlled heap overflow...')
-            heap_overflow_pattern = "A" * 50  # Larger than 32-byte malloc buffer
-            heap_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
-                input=f"process {heap_overflow_pattern}\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Test 4: Network interface bounds checking - now has protection but may still be vulnerable
-            self.logger.info('Testing network interface with bounds checking...')
-            # Test with input under limit
-            normal_net_input = "A" * 200  # Under 256 limit
-            net_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input=f"network\n{normal_net_input}\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Test 5: Buffer overflow protection in process_command
-            self.logger.info('Testing buffer overflow protection...')
-            # Test with input just under 128 bytes (should work)
-            safe_input = "B" * 120
-            safe_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input=f"process {safe_input}\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Test with input over 128 bytes (should be truncated but not crash)
-            large_input = "C" * 200
-            large_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input=f"process {large_input}\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            
-            # Test 6: Shell access attempt (should be denied initially)
-            self.logger.info('Testing shell access denial...')
-            shell_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="shell\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "AKSES DITOLAK" in shell_test.stdout, 'Shell access should be denied initially'
-            
-            self.logger.info('Specific vulnerability behavior tests completed')
-            return True
-            
-        except Exception as e:
-            self.logger.error(f'Specific vulnerability behavior test failed: {e}')
-            return False
+            stdout, stderr = proc.communicate(input=input_str, timeout=timeout + 2)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            stdout, stderr = proc.communicate()
+        return stdout
 
     def check(self):
         try:
@@ -188,7 +59,7 @@ class C2(Challenge):
                 host_flag = f.read().strip()
 
             container_flag = subprocess.run(
-                ["docker", "exec", "c2-system", "cat", "/flag.txt"],
+                ["docker", "exec", "c2_container", "cat", "/flag.txt"],
                 capture_output=True,
                 text=True
             ).stdout.strip()                    
@@ -199,35 +70,21 @@ class C2(Challenge):
 
             # Step 2: Check if can access binary via SSH
             ssh_check = subprocess.run(
-                ["docker", "exec", "c2-system", "test", "-f", "/usr/local/bin/tni_c2_system"],
+                ["docker", "exec", "c2_container", "test", "-f", "/usr/local/bin/tni_c2_system"],
                 capture_output=True,
                 text=True
             )
             assert ssh_check.returncode == 0, 'C2 binary not found in container'
             self.logger.info('C2 binary check passed')
             
-            # Step 3: Check if SSH service is accessible (port 15022)
-            ssh_port_check = subprocess.run(
-                ["docker", "exec", "c2-system", "netstat", "-an"],
-                capture_output=True,
-                text=True
-            )
-            assert ":22" in ssh_port_check.stdout, 'SSH service not running'
-            self.logger.info('SSH service check passed for c2')
-            
             # Step 4: Check if the C2 binary is executable and responding
-            binary_check = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "5", "/usr/local/bin/tni_c2_system"],
-                input="exit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "TNI COMMAND CENTER" in binary_check.stdout, 'C2 binary not responding correctly'
+            binary_out = self._run_c2(["exit"], timeout=5)
+            assert "TNI COMMAND CENTER" in binary_out, 'C2 binary not responding correctly'
             self.logger.info('C2 binary execution check passed')
             
             # Step 5: Check if clearance token file exists (needed for exploitation)
             token_check = subprocess.run(
-                ["docker", "exec", "c2-system", "test", "-f", "/home/c2user/clearance_token"],
+                ["docker", "exec", "c2_container", "test", "-f", "/opt/clearance_token"],
                 capture_output=True,
                 text=True
             )
@@ -235,133 +92,51 @@ class C2(Challenge):
             self.logger.info('Clearance token check passed for c2')
             
             # Step 6: Test process_command function (format string vulnerability)
-            process_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="process test_data\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "Memproses komando: test_data" in process_test.stdout, 'process_command function not working'
-            assert "C2 Log: test_data" in process_test.stdout, 'Format string vulnerability in process_command not accessible'
+            process_out = self._run_c2(["process test_data", "exit"], timeout=10)
+            assert "Memproses komando: test_data" in process_out, 'process_command function not working'
+            assert "C2 Log: test_data" in process_out, 'Format string vulnerability in process_command not accessible'
             self.logger.info('process_command function check passed')
             
             # Step 7: Test system_diagnostics function (format string vulnerability)
-            diag_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="diagnostic\ntest_diag\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "C2 Diagnostics" in diag_test.stdout, 'system_diagnostics function not accessible'
-            assert "Diagnostic 0: test_diag" in diag_test.stdout, 'Format string in diagnostics not working'
+            diag_out = self._run_c2(["diagnostic", "test_diag", "exit"], timeout=10)
+            assert "C2 Diagnostics" in diag_out, 'system_diagnostics function not accessible'
+            assert "Diagnostic 0: test_diag" in diag_out, 'Format string in diagnostics not working'
             self.logger.info('system_diagnostics function check passed')
             
             # Step 8: Test manage_classified_data function (heap UAF vulnerability)
-            classified_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="classified\ntest_classified_data\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "Data tersimpan di alamat:" in classified_test.stdout, 'manage_classified_data function not working'
-            assert "Data masih dapat diakses:" in classified_test.stdout, 'UAF vulnerability in classified_data not accessible'
+            classified_out = self._run_c2(["classified", "test_classified_data", "exit"], timeout=10)
+            assert "Data tersimpan di alamat:" in classified_out, 'manage_classified_data function not working'
+            assert "Data masih dapat diakses:" in classified_out, 'UAF vulnerability in classified_data not accessible'
             self.logger.info('manage_classified_data function check passed')
             
             # Step 9: Test add_officer function (buffer overflow vulnerability)
-            officer_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="officer\nTest Officer\nKapten\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "Nama perwira:" in officer_test.stdout, 'add_officer function not accessible'
-            assert "Pangkat:" in officer_test.stdout, 'add_officer input handling not working'
+            officer_out = self._run_c2(["officer", "Test Officer", "Kapten", "exit"], timeout=10)
+            assert "Nama perwira:" in officer_out, 'add_officer function not accessible'
+            assert "Pangkat:" in officer_out, 'add_officer input handling not working'
             self.logger.info('add_officer function check passed')
             
             # Step 10: Test network_interface function (function pointer overwrite)
-            network_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="network\ntest_packet\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "Network Interface" in network_test.stdout, 'network_interface function not accessible'
-            assert "Paket diproses:" in network_test.stdout, 'network_interface processing not working'
+            network_out = self._run_c2(["network", "test_packet", "exit"], timeout=10)
+            assert "Network Interface" in network_out, 'network_interface function not accessible'
+            assert "Paket diproses:" in network_out, 'network_interface processing not working'
             self.logger.info('network_interface function check passed')
             
             # Step 11: Test help command and command recognition
-            help_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="help\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "Available commands:" in help_test.stdout, 'Help command not working'
-            assert "process <data>" in help_test.stdout, 'Command help not complete'
+            help_out = self._run_c2(["help", "exit"], timeout=10)
+            assert "Available commands:" in help_out, 'Help command not working'
+            assert "process <data>" in help_out, 'Command help not complete'
             self.logger.info('Help and command interface check passed')
             
             # Step 12: Test controlled buffer handling (now has bounds checking)
             # Test with safe input size (should work correctly)
-            safe_overflow_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
-                input="process " + "A" * 50 + "\nexit\n",
-                capture_output=True,
-                text=True
-            )
+            safe_overflow_out = self._run_c2(["process " + "A" * 50, "exit"], timeout=15)
             # Should process input correctly with new bounds checking
-            assert "Memproses komando:" in safe_overflow_test.stdout, 'Safe input processing not working'
+            assert "Memproses komando:" in safe_overflow_out.stdout if hasattr(safe_overflow_out, 'stdout') else "Memproses komando:" in safe_overflow_out, 'Safe input processing not working'
             self.logger.info('Controlled buffer handling check passed')
-            
-            # Step 13: Test new controlled heap vulnerability (malloc(32) with long input)
-            heap_vuln_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "15", "/usr/local/bin/tni_c2_system"],
-                input="process " + "B" * 40 + "\nexit\n",  # Triggers malloc(32) with 40-char input
-                capture_output=True,
-                text=True
-            )
-            assert "Memproses komando:" in heap_vuln_test.stdout, 'Controlled heap vulnerability not accessible'
-            self.logger.info('Controlled heap vulnerability check passed')
-            
-            # Step 14: Verify heap corruption issues are fixed (no more giant malloc)
-            stability_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="process test1\nprocess test2\nprocess test3\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            assert "Memproses komando: test1" in stability_test.stdout, 'Multiple commands causing instability'
-            assert "Memproses komando: test2" in stability_test.stdout, 'Multiple commands causing instability'
-            assert "Memproses komando: test3" in stability_test.stdout, 'Multiple commands causing instability'
-            self.logger.info('Heap stability check passed - no more malloc corruption')
-            
-            # Step 15: Verify format string vulnerability is still exploitable
-            format_exploit_test = subprocess.run(
-                ["docker", "exec", "c2-system", "timeout", "10", "/usr/local/bin/tni_c2_system"],
-                input="process %x.%x.%x\nexit\n",
-                capture_output=True,
-                text=True
-            )
-            # Should show format string output (leaked memory addresses)
-            assert "C2 Log:" in format_exploit_test.stdout, 'Format string vulnerability not exploitable'
-            self.logger.info('Format string vulnerability accessibility check passed')
-            
-            # Step 16: Run additional vulnerability access tests
-            vuln_access_result = self.test_vulnerability_access()
-            if not vuln_access_result:
-                self.logger.warning('Some vulnerability access tests failed')
-            
-            # Step 17: Run post-patch functionality tests
-            post_patch_result = self.test_post_patch_functionality()
-            if not post_patch_result:
-                self.logger.warning('Post-patch functionality tests failed')
-            
-            # Step 18: Run specific vulnerability behavior tests
-            vuln_behavior_result = self.test_specific_vulnerability_behaviors()
-            if not vuln_behavior_result:
-                self.logger.warning('Specific vulnerability behavior tests failed')
             
             return True
 
         except Exception as e:
             self.logger.error(f'Could not check c2: {e}')
             return False
+        

@@ -3,14 +3,15 @@ version: "3"
 services:
   c2:
     restart: always
-    container_name: c2-system
+    container_name: c2_container
+    hostname: c2
     build:
       context: ./
       args:
-        - PASSWORD=TNI_C2_PASSWORD_15000
+        - PASSWORD=root
     ports:
-      - "15000:8000"    
-      - "15022:22"      
+      - "11000:8000"    
+      - "11022:22"      
     volumes:
       - ./flag.txt:/flag.txt:ro
     environment:
