@@ -3,10 +3,9 @@ from pydantic import BaseModel
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from config import get_settings
 
-from challenges.Poke import Poke
 from challenges.C2 import C2
-from challenges.JJ import JJ
-from challenges.Lfs import Lfs
+from challenges.Notes import Notes
+from challenges.Lfs import LFS
 from challenges.Lunachef import Lunachef
 
 import os
@@ -16,10 +15,9 @@ security = HTTPBasic()
 settings = get_settings()
 
 challenges = {
-    "poke": Poke(10000),
     "c2": C2(11000),
-    "jj": JJ(12000),
-    "lfs": Lfs(13000),
+    "notes": Notes(12000),
+    "lfs": LFS(13000),
     "lunachef": Lunachef(14000),
 }
 

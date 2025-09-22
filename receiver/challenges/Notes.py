@@ -5,9 +5,9 @@ import requests
 import random
 import subprocess
 
-class Lunachef(Challenge):
-    flag_location = 'flags/lunachef.txt'
-    history_location = 'history/lunachef.txt'
+class Notes(Challenge):
+    flag_location = 'flags/notes.txt'
+    history_location = 'history/notes.txt'
 
     def distribute(self, flag):
         try:
@@ -31,16 +31,16 @@ class Lunachef(Challenge):
                 host_flag = f.read().strip()
 
             container_flag = subprocess.run(
-                ["docker", "exec", "lunachef_container", "cat", "/flag.txt"],
+                ["docker", "exec", "notes_container", "cat", "/flag.txt"],
                 capture_output=True,
                 text=True
             ).stdout.strip()
             
             assert host_flag == container_flag, 'Flag mismatch between host and container'
             
-            self.logger.info('Check passed for lunachef')
+            self.logger.info('Check passed for notes')
             return True
 
         except Exception as e:
-            self.logger.error(f'Could not check lunachef: {e}')
+            self.logger.error(f'Could not check notes: {e}')
             return False

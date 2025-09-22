@@ -22,19 +22,19 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
 
-  jj:
-    container_name: jj_container
-    hostname: jj
+  notes:
+    container_name: notes_container
+    hostname: notes
     restart: always
+    ports:
+      - "12000:8000"
+      - "12022:22"
     build:
-      context: JJ
+      context: Notes
       args:
           - PASSWORD=$PASSWORD_12000
-    ports:
-      - "12000:8080"
-      - "12022:22"
     volumes:
-      - ../receiver/flags/jj.txt:/flag.txt:ro
+      - ../receiver/flags/notes.txt:/flag.txt:ro
       - ../utils/bashrc:/root/.bashrc:ro
       - ../utils/preexec.sh:/root/.preexec.sh:ro
     environment:
