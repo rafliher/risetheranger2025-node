@@ -59,11 +59,9 @@ USER ctfuser
 EXPOSE 5000
 EXPOSE 22
 
-# Copy start script and set execute permissions
-COPY start.sh .
-RUN chmod +x start.sh
-
 # Switch back to root to start SSH service and then run the application
 USER root
+COPY start.sh .
+RUN chmod +x start.sh
 CMD service ssh start && su - ctfuser -c "cd /app && ./start.sh"
 
