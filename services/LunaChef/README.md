@@ -1,7 +1,17 @@
 # LunaChef
 
 ## Description
-Pernahkah Anda mencoba CyberChef? Dalam challenge Lunachef, Anda akan menemukan dapur enkripsi berisi Moonlight Encryption dan Stellar Signing. Cobalah berbagai fitur dan algoritma yang tersedia, pahami source code yang diberikan, dan ikuti aturan patching dengan hati-hati karena checker kami tidak mudah ditipu. Oh ya, jangan terlalu lama menikmati backsound—Flag jelas bukan tersembunyi di sana.
+'''markdown
+Pernahkah Anda mencoba **CyberChef**?  
+Dalam challenge **Lunachef**, Anda akan masuk ke sebuah **dapur enkripsi** berisi:  
+
+- 🌙 **Moonlight Encryption**  
+- ✨ **Stellar Signing**  
+
+Eksperimenlah dengan berbagai **fitur dan algoritma**, teliti *source code* yang tersedia, dan pastikan Anda **mematuhi aturan patching** ⚙️—karena *checker* kami tidak mudah ditipu.  
+
+🎧 *Backsound* memang menemani perjalanan Anda, tapi ingat: **Flag tidak akan bersembunyi di sana**.  
+'''
 
 ## Flag 
 RTRTNI25{PLACEHOLDER}
