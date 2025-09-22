@@ -49,6 +49,20 @@ RUN echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
 # Start SSH service
 RUN ssh-keygen -A
 RUN mkdir -p /run/sshd && chmod 755 /run/sshd
+# 1. Atur kepemilikan semua file aplikasi ke root. Ini adalah baseline aman kita.
+RUN chown -R root:root /app
+
+# 2. Atur izin dasar: root bisa melakukan apa saja, yang lain hanya bisa membaca dan mengeksekusi.
+RUN chmod -R 755 /app
+
+# 4. Berikan kepemilikan direktori blacklists secara spesifik kepada ctfuser.
+RUN chown -R ctfuser:ctfuser /app/blacklists
+
+# 5. Berikan izin tulis grup pada direktori blacklists.
+RUN chmod -R 775 /app/blacklists
+
+# 6. Berikan kepemilikan direktori fungsional kepada ctfuser (yang menjalankan web app).
+RUN chown -R ctfuser:ctfuser /app/uploads /mnt /app/static
 
 # Create the main flag file
 COPY flag.txt /flag.txt
