@@ -4,9 +4,10 @@ Encryption Service
 patching_notes:
 - keep this line: 
     from config import key
-    encryption_service = EncryptionService()
+    encryption_service = EncryptionService(key)
 - keep class base structure and methods:
     class EncryptionService:
+    def __init__(self, KEY):
     def encrypt(self, message: str) -> dict:
     def decrypt(self, encrypted_data: str) -> dict:
 - dont change structure or remote config.py (you can change the values)
@@ -17,8 +18,8 @@ from base64 import b64encode, b64decode
 from config import key
 
 class EncryptionService:
-    def __init__(self):
-        self.KEY = key
+    def __init__(self, KEY):
+        self.KEY = KEY
     
     def _xor_operation(self, data: bytes, key: bytes) -> bytes:
         key_len = len(key)
@@ -72,4 +73,4 @@ class EncryptionService:
                 'error': f'Decryption failed: {str(e)}'
             }
 
-encryption_service = EncryptionService()
+encryption_service = EncryptionService(key)
