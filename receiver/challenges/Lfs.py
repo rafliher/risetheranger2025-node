@@ -16,7 +16,7 @@ class LFS(Challenge):
     """
     flag_location = 'flags/lfs.txt'
     history_location = 'history/lftd.txt'
-    payload_base_dir = 'payloads/lfs' # Base directory for test payloads
+    payload_base_dir = '../payloads/lfs' # Base directory for test payloads
 
     def distribute(self, flag):
         """Writes the current flag to the specified location for the service to use."""

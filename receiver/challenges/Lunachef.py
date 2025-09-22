@@ -31,16 +31,16 @@ class Lunachef(Challenge):
                 host_flag = f.read().strip()
 
             container_flag = subprocess.run(
-                ["docker", "exec", "poke_container", "cat", "/flag.txt"],
+                ["docker", "exec", "lunachef_container", "cat", "/flag.txt"],
                 capture_output=True,
                 text=True
             ).stdout.strip()
             
             assert host_flag == container_flag, 'Flag mismatch between host and container'
             
-            self.logger.info('Check passed for poke')
+            self.logger.info('Check passed for lunachef')
             return True
 
         except Exception as e:
-            self.logger.error(f'Could not check poke: {e}')
+            self.logger.error(f'Could not check lunachef: {e}')
             return False
