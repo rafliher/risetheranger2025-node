@@ -1,6 +1,7 @@
 from .Challenge import Challenge
 import requests
 import secrets
+import subprocess
 
 class Notes(Challenge):
     flag_location = 'flags/notes.txt'
@@ -92,4 +93,26 @@ class Notes(Challenge):
             return False
 
         self.logger.info("All core functionality checks passed.")
+        
+        
+        try:
+            # Check if the flag still exists and matches the one in the container
+            with open(self.flag_location, 'r') as f:
+                host_flag = f.read().strip()
+
+            container_flag = subprocess.run(
+                ["docker", "exec", "notes_container", "cat", "/flag.txt"],
+                capture_output=True,
+                text=True
+            ).stdout.strip()
+            
+            assert host_flag == container_flag, 'Flag mismatch between host and container'
+            
+            self.logger.info('Check passed for notes')
+            return True
+
+        except Exception as e:
+            self.logger.error(f'Could not check notes: {e}')
+            return False
+        
         return True
