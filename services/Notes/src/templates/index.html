@@ -3,231 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Note Taking App </title>
+  <title>Death Note App</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
+
   <!-- Bootstrap CSS -->
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
-
     body {
-      font-family: 'Orbitron', sans-serif;
-      color: #e0e0ff;
-      min-height: 100vh;
+      background: #000;
+      font-family: 'Special Elite', cursive;
+      color: #e0e0e0;
+      text-shadow: 0 0 5px #000;
       display: flex;
-      align-items: center;
       justify-content: center;
-      padding: 30px;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
       overflow: hidden;
     }
 
-    /* SKY BACKGROUND */
-    .sky {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: radial-gradient(circle at center, #0a0a2a, #000);
-      overflow: hidden;
-      z-index: -1;
-    }
-
-    .star {
-      position: absolute;
-      background: #fff;
-      border-radius: 50%;
-      opacity: 0.8;
-      animation: twinkle 2s infinite alternate;
-    }
-
-    @keyframes twinkle {
-      from { opacity: 0.2; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1.2); }
-    }
-
-    /* APP CONTAINER */
-    .app-container {
-      background: rgba(15, 15, 40, 0.9);
-      border: 2px solid #0ff;
-      border-radius: 20px;
-      box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
-      padding: 40px;
-      width: 100%;
-      max-width: 800px;
-      animation: fadeIn 1s ease-in-out;
-    }
-
-    h1 {
-      font-weight: 700;
+    h1, h2 {
+      font-family: 'Cinzel Decorative', cursive;
+      color: #fff;
       text-align: center;
-      margin-bottom: 30px;
-      color: #0ff;
-      text-shadow: 0 0 8px #0ff, 0 0 15px #00f;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px red, 0 0 20px black;
     }
 
-    label {
-      color: #0ff;
-      font-weight: 600;
+    .container {
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 30px red;
+      max-width: 600px;
+      width: 100%;
     }
 
     .form-control {
-      background: #111122;
-      color: #0ff;
-      border-radius: 12px;
-      border: 2px solid #333;
-      transition: 0.3s;
+      background: #111;
+      border: 1px solid #444;
+      color: white;
+      font-family: 'Special Elite', cursive;
     }
 
     .form-control:focus {
-      border-color: #0ff;
-      box-shadow: 0 0 10px #0ff;
-      background: #0a0a20;
+      background: #222;
+      border-color: red;
+      box-shadow: 0 0 10px red;
+      color: #fff;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #0ff, #09f);
-      border: none;
-      border-radius: 12px;
-      font-weight: 600;
-      padding: 10px 20px;
+    .btn-deathnote {
+      background: black;
+      border: 1px solid red;
+      color: red;
+      font-family: 'Cinzel Decorative', cursive;
+      text-transform: uppercase;
       transition: 0.3s;
-      box-shadow: 0 0 15px #09f;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 0 25px #0ff;
+    .btn-deathnote:hover {
+      background: red;
+      color: black;
+      box-shadow: 0 0 15px red;
     }
 
     #noteList {
-      margin-top: 40px;
-    }
-
-    #noteList h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #0ff;
-      text-align: center;
-      margin-bottom: 20px;
-      text-shadow: 0 0 8px #0ff;
-    }
-
-    #noteListItems {
-      list-style: none;
-      padding: 0;
+      margin-top: 30px;
     }
 
     #noteListItems li {
-      background: rgba(10, 10, 30, 0.8);
-      margin-bottom: 12px;
-      padding: 12px 18px;
-      border-radius: 12px;
-      border: 1px solid #0ff;
-      box-shadow: 0 0 10px rgba(0,255,255,0.3);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      list-style: none;
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid red;
       transition: 0.3s;
+    }
+
+    #noteListItems li a {
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Special Elite', cursive;
     }
 
     #noteListItems li:hover {
-      transform: translateX(8px);
-      box-shadow: 0 0 20px #0ff;
+      background: rgba(255, 0, 0, 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 0 10px red;
     }
 
-    #noteListItems a {
-      text-decoration: none;
-      color: #0ff;
-      font-weight: 600;
-      transition: 0.3s;
-    }
-
-    #noteListItems a:hover {
-      color: #09f;
-      text-shadow: 0 0 8px #09f;
-    }
-
-    .delete-btn {
-      background: none;
-      border: none;
-      color: #f55;
-      font-size: 1.2rem;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .delete-btn:hover {
-      color: #ff4444;
-      text-shadow: 0 0 8px #f00;
-    }
-
-    #searchBar {
-      margin-bottom: 20px;
-      border-radius: 12px;
-      border: 2px solid #0ff;
-      background: #111122;
-      color: #0ff;
-      padding: 10px;
-      width: 100%;
-    }
-
-    /* Toggle Button */
-    .toggle-btn {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: #0ff;
-      color: #000;
-      border: none;
-      border-radius: 30px;
-      padding: 8px 15px;
+    footer {
+      margin-top: 20px;
+      text-align: center;
       font-size: 14px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .toggle-btn:hover {
-      background: #09f;
-      color: #fff;
-      box-shadow: 0 0 15px #0ff;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
+      color: #aaa;
+      font-family: 'Special Elite', cursive;
     }
   </style>
 </head>
 <body>
 
-<div class="sky" id="sky"></div> <!-- animated sky background -->
-
-<button class="toggle-btn" id="toggleTheme">🌙 Dark</button>
-
-<div class="app-container">
-  <h1>⚡ Note App</h1>
+<div class="container">
+  <h1>Death Note</h1>
   
-  <!-- Search -->
-  <input type="text" id="searchBar" placeholder="🔍 Search notes...">
-
   <!-- Form for creating a new note -->
   <form id="noteForm" action="/create" method="POST">
     <div class="form-group">
-      <label for="noteName">Note Name</label>
-      <input type="text" class="form-control" id="noteName" name="name" placeholder="Enter note name" required>
+      <label for="noteName">Victim's Name</label>
+      <input type="text" class="form-control" id="noteName" name="name" placeholder="Enter name..." required>
     </div>
     <div class="form-group">
-      <label for="noteBody">Note Body</label>
-      <textarea class="form-control" id="noteBody" name="body" rows="5" placeholder="Enter note contents" required></textarea>
+      <label for="noteBody">Cause of Death</label>
+      <textarea class="form-control" id="noteBody" name="body" rows="5" placeholder="Heart attack by default..." required></textarea>
     </div>
-    <button type="submit" class="btn btn-primary btn-block">Create Note</button>
+    <button type="submit" class="btn btn-deathnote btn-block">Write in Death Note</button>
   </form>
 
   <!-- List of notes -->
-  <div id="noteList">
-    <h2>📂 Your Notes</h2>
+  <div id="noteList" class="mt-5">
+    <h2>Written Names</h2>
     <ul id="noteListItems"></ul>
   </div>
+
+  <footer>
+    <p>⚡ Use wisely... Every name written here seals a fate. ⚡</p>
+  </footer>
 </div>
+
+<!-- Audio Element -->
+<audio id="bg-music" loop>
+  <source src="https://tiengdong.com/wp-content/uploads/tieng-cuoi-cua-kiras-ban-goc-www_tiengdong_com.mp3" type="audio/mpeg">
+</audio>
 
 <!-- jQuery -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -236,39 +149,34 @@
 
 <script>
   $(document).ready(function () {
-    const noteList = $('#noteListItems');
-
+    // Fetch list of notes
     function loadNotes() {
       fetch('/list')
         .then(response => response.json())
         .then(data => {
-          noteList.empty();
+          const noteList = $('#noteListItems');
+          noteList.empty(); // clear old list
           data.notes.forEach(note => {
             const li = $('<li></li>');
             const a = $('<a></a>').attr('href', `/read?name=${note}`).text(note);
-            const delBtn = $('<button class="delete-btn">🗑</button>').click(() => deleteNote(note));
-            li.append(a).append(delBtn);
+            li.append(a);
             noteList.append(li);
           });
         })
         .catch(error => console.error('Error fetching notes:', error));
     }
 
-    function deleteNote(noteName) {
-      fetch(`/delete?name=${noteName}`, { method: 'POST' })
-        .then(response => {
-          if (response.ok) loadNotes();
-        })
-        .catch(error => console.error('Error deleting note:', error));
-    }
-
-    // Initial load
-    loadNotes();
+    loadNotes(); // load on page start
 
     // Form submission
     $('#noteForm').submit(function (e) {
       e.preventDefault();
       const formData = $(this).serialize();
+
+      // 🎵 Play Kira’s laugh when user writes a name
+      const audio = document.getElementById("bg-music");
+      audio.play().catch(err => console.log("Autoplay blocked:", err));
+
       fetch('/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -276,38 +184,17 @@
       })
       .then(response => {
         if (response.ok) {
-          loadNotes();
-          this.reset();
+          $('#noteForm')[0].reset(); // clear form
+          loadNotes(); // reload notes dynamically
         } else {
           throw new Error('Failed to create note');
         }
       })
       .catch(error => console.error('Error creating note:', error));
     });
-
-    // Search filter
-    $('#searchBar').on('keyup', function() {
-      const value = $(this).val().toLowerCase();
-      $("#noteListItems li").filter(function() {
-        $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-      });
-    });
-
-    // Generate stars for background
-    const sky = document.getElementById("sky");
-    for (let i = 0; i < 100; i++) {
-      const star = document.createElement("div");
-      const size = Math.random() * 3 + 1;
-      star.classList.add("star");
-      star.style.width = `${size}px`;
-      star.style.height = `${size}px`;
-      star.style.top = `${Math.random() * 100}%`;
-      star.style.left = `${Math.random() * 100}%`;
-      star.style.animationDuration = `${Math.random() * 3 + 2}s`;
-      sky.appendChild(star);
-    }
   });
 </script>
+
 
 </body>
 </html>
