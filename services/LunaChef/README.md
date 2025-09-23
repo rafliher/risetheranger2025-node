@@ -2,15 +2,9 @@
 
 ## Description
 '''markdown
-Pernahkah Anda mencoba **CyberChef**?  
-Dalam challenge **Lunachef**, Anda akan masuk ke sebuah **dapur enkripsi** berisi:  
-
-- 🌙 **Moonlight Encryption**  
-- ✨ **Stellar Signing**  
-
-Eksperimenlah dengan berbagai **fitur dan algoritma**, teliti *source code* yang tersedia, dan pastikan Anda **mematuhi aturan patching** ⚙️—karena *checker* kami tidak mudah ditipu.  
-
-🎧 *Backsound* memang menemani perjalanan Anda, tapi ingat: **Flag tidak akan bersembunyi di sana**.  
+Pernahkah Anda mencoba **CyberChef**? Dalam challenge **Lunachef** berisi:  
+🌙 **MoonEnc** ✨ **StelSign** 🌌 **LunHash**
+Eksperiman dengan **fitur dan algoritma**, lihat *source code*, dan **mematuhi aturan patching** ⚙️—karena *checker* mudah ditipu. 🎧 *Backsound* sangat menarik, tapi ingat: **Flag tidak akan bersembunyi di sana**.  
 '''
 
 ## Flag 
