@@ -33,3 +33,4 @@ uploads/
 README.md
 docker-compose.yml
 Dockerfile
+.gitignore
