@@ -11,6 +11,9 @@ MAX_FILE_SIZE = 6 * 1024 * 1024
 ALLOWED_EXTENSION = '.dd'
 FLAG = open('/flag.txt', 'r').read().strip()
 
+def onlyoneortwolenchars(s):
+    return len(s) <= 2
+
 def get_blacklist():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
@@ -19,6 +22,8 @@ def get_blacklist():
             processed_lines = []
             for line in valid_lines:
                 clean_line = line.strip()[:10]
+                if onlyoneortwolenchars(clean_line):
+                    continue
                 processed_lines.append(clean_line)
             return processed_lines
     except FileNotFoundError:
@@ -32,6 +37,9 @@ def get_string_quota():
             quota = 0
             for line in valid_lines:
                 lng = len(line.strip()[:10])
+                clean_line = line.strip()[:10]
+                if onlyoneortwolenchars(clean_line):
+                    continue
                 line_quota = (lng * 3) + ((10 - lng) * 88)
                 quota += line_quota
             if quota == 0:

@@ -16,6 +16,9 @@ MAX_FILE_SIZE = 150 * 1024
 PDF_SIGNATURE = b'%PDF-'
 FLAG = open('/flag.txt', 'r').read().strip()
 
+def onlyoneortwolenchars(s):
+    return len(s) <= 2
+
 def get_blacklist():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
@@ -24,6 +27,8 @@ def get_blacklist():
             processed_lines = []
             for line in valid_lines:
                 clean_line = line.strip()[:10]
+                if onlyoneortwolenchars(clean_line):
+                    continue
                 processed_lines.append(clean_line)
             return processed_lines
     except FileNotFoundError:
@@ -37,6 +42,9 @@ def get_string_quota():
             valid_lines = lines[:4] 
             for line in valid_lines:
                 lng = len(line.strip()[:10])
+                clean_line = line.strip()[:10]
+                if onlyoneortwolenchars(clean_line):
+                    continue
                 line_quota = (lng * 3) + ((10 - lng) * 15)
                 quota += line_quota
             if quota == 0:
