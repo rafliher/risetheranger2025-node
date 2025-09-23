@@ -12,7 +12,7 @@ def get_blacklist():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
             lines = f.read().splitlines()
-            valid_lines = lines[:5] 
+            valid_lines = lines[:3] 
             processed_lines = []
             for line in valid_lines:
                 clean_line = line.strip()[:10]
@@ -26,7 +26,7 @@ def get_string_quota():
         quota = 0
         with open(BLACKLIST_FILE, 'r') as f:
             lines = f.read().splitlines()
-            valid_lines = lines[:5] 
+            valid_lines = lines[:3] 
             for line in valid_lines:
                 lng = len(line.strip()[:10])
                 line_quota = (lng * 3) + ((10 - lng) * 15)
