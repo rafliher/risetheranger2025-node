@@ -88,7 +88,7 @@ def handle_disk_analysis(request):
             safe_exif_e = escape(str(exif_e))
             template_string += f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">ExifTool Metadata:</h3>
-                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Gagal menjalankan ExifTool: {safe_exif_e}</pre>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Failed to run ExifTool: {safe_exif_e}</pre>
             """
 
         partition_info_str = ""
@@ -97,7 +97,7 @@ def handle_disk_analysis(request):
         try:
             mmls_process = subprocess.run(['mmls', filepath], capture_output=True, text=True, timeout=10)
             if mmls_process.returncode != 0:
-                raise ValueError(f"Gagal membaca tabel partisi: {mmls_process.stderr.strip()}")
+                raise ValueError(f"Failed to read partition table: {mmls_process.stderr.strip()}")
             
             partition_info_str = mmls_process.stdout
             start_sector = None
@@ -115,38 +115,38 @@ def handle_disk_analysis(request):
                         break
             
             if start_sector is None:
-                raise ValueError("Tidak ditemukan partisi NTFS yang valid.")
+                raise ValueError("No valid NTFS partition was found.")
 
             offset = start_sector * sector_size
             with open(filepath, 'rb') as f:
                 f.seek(offset + 3)
                 signature = f.read(4)
                 if signature != b'NTFS':
-                    raise ValueError(f"Signature NTFS tidak valid di partisi (ditemukan: {signature!r}).")
+                    raise ValueError(f"Invalid NTFS signature on partition (found: {signature!r}).")
 
             fls_process = subprocess.run(['fls', '-r', '-o', str(start_sector), filepath], capture_output=True, text=True, timeout=20)
             if fls_process.returncode != 0:
-                raise RuntimeError(f"Gagal mendaftar file di partisi: {fls_process.stderr.strip()}")
+                raise RuntimeError(f"Failed to list files on partition: {fls_process.stderr.strip()}")
             
             ls_result_str = fls_process.stdout
 
         except (ValueError, RuntimeError) as partition_e:
-            partition_info_str = f"Gagal membaca sebagai disk berpartisi. Mencoba sebagai raw filesystem...\n\nAlasan: {partition_e}"
+            partition_info_str = f"Failed to read as a partitioned disk. Trying as a raw filesystem...\n\nReason: {partition_e}"
             
             try:
                 with open(filepath, 'rb') as f:
                     f.seek(3)
                     signature = f.read(4)
                     if signature != b'NTFS':
-                        raise ValueError(f"File tidak memiliki signature NTFS yang valid di awal file (ditemukan: {signature!r}).")
+                        raise ValueError(f"File does not have a valid NTFS signature at the beginning of the file (found: {signature!r}).")
 
                 fls_process = subprocess.run(['fls', '-r', '-o', '0', filepath], capture_output=True, text=True, timeout=20)
                 if fls_process.returncode != 0:
-                    raise RuntimeError(f"Gagal mendaftar file: {fls_process.stderr.strip()}")
+                    raise RuntimeError(f"Failed to list files: {fls_process.stderr.strip()}")
                 
                 ls_result_str = fls_process.stdout
             except (ValueError, RuntimeError) as raw_e:
-                ls_result_str = f"Analisis Gagal. Tidak bisa membaca file sebagai disk berpartisi ataupun raw filesystem.\n\nError terakhir: {raw_e}"
+                ls_result_str = f"Analysis Failed. Unable to read the file as either a partitioned disk or a raw filesystem.\n\nLast error:{raw_e}"
 
         try:
             safe_partition_info = escape(partition_info_str)
@@ -159,20 +159,20 @@ def handle_disk_analysis(request):
             safe_partition_render_e = escape(str(partition_render_e))
             template_string += f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">Partition Information:</h3>
-                <pre>Gagal me-render informasi partisi: {safe_partition_render_e}</pre><
+                <pre>Failed to render partition information: {safe_partition_render_e}</pre><
             """
 
         
-        if ls_result_str and not ls_result_str.startswith("Analisis Gagal"):
+        if ls_result_str and not ls_result_str.startswith("Analysis Failed"):
             blacklist = get_blacklist()
-            safe_ls_output = ls_result_str
             if blacklist:
                 for word in blacklist:
-                    if word: safe_ls_output = safe_ls_output.replace(word, '')
-            ls_result_str = safe_ls_output
+                    if word and word in ls_result_str:
+                        raise ValueError("File listing contains a blacklisted keyword.")
+            
             string_quota = get_string_quota()
             if len(ls_result_str) > string_quota:
-                raise ValueError("Daftar file terlalu panjang berdasarkan kuota yang diizinkan dari blacklist.")
+                raise ValueError("File listing output exceeds allowed length based on blacklist.")
 
         try:
             ls_res = f"""
@@ -185,7 +185,7 @@ def handle_disk_analysis(request):
             safe_ls_render_e = escape(str(ls_render_e))
             template_string += f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">File Listing:</h3>
-                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Gagal me-render daftar file: {safe_ls_render_e}</pre>
+                <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Failed to render the file list: {safe_ls_render_e}</pre>
             """
 
         try:
@@ -213,7 +213,7 @@ def handle_disk_analysis(request):
         safe_e = escape(str(e))
         template_string += f"""
             <h3>Fatal Error:</h3>
-            <div class="result-box"><pre>Terjadi error kritis: {safe_e}</pre></div>
+            <div class="result-box"><pre>A critical error occurred: {safe_e}</pre></div>
         """
         return render_template_string(template_string)
 
