@@ -6,16 +6,8 @@ import requests
 import os
 
 class LFS(Challenge):
-    """
-    SLA Checker for the 'Lovely Forensic Suite' (LFS) challenge.
-    This checker verifies:
-    1. The web service is online and pages are accessible.
-    2. The core functionality of each analysis tool (disk, pdf, png) remains intact
-       by uploading benign files and checking for a valid response. This prevents
-       teams from overly hardening or breaking the service.
-    """
     flag_location = 'flags/lfs.txt'
-    history_location = 'history/lftd.txt'
+    history_location = 'history/lfs.txt'
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

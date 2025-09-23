@@ -1,13 +1,25 @@
 from .Challenge import Challenge
 import requests
 
-class NotesChecker(Challenge):
-    """
-    SLA Checker for the 'Notes' challenge.
-    This checker verifies:
-    1. The web service is online and pages are accessible.
-    2. Core functionality works: create, read, and list notes.
-    """
+class Notes(Challenge):
+    flag_location = 'flags/notes.txt'
+    history_location = 'history/notes.txt'
+
+    def distribute(self, flag):
+        """Writes the current flag to the specified location for the service to use."""
+        try:
+            with open(self.flag_location, 'w') as f:
+                f.write(flag)
+            
+            with open(self.history_location, 'a') as f:
+                f.write(flag + '\n')
+
+            self.logger.info(f"Flag '{flag}' distributed successfully to {self.flag_location}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Could not write flag to {self.flag_location}: {e}")
+            return False
 
     def _test_endpoint_accessibility(self, base_url):
         """Checks if all required web pages are accessible via GET requests."""
