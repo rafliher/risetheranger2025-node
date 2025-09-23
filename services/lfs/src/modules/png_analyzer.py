@@ -4,14 +4,36 @@ from flask import render_template_string
 
 BLACKLIST_FILE = '/app/blacklists/eval_blacklist.txt'
 UPLOAD_FOLDER = '/app/uploads'
-MAX_FILE_SIZE = 1 * 1024 * 1024  
+MAX_FILE_SIZE = 80 * 1024
 PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n' 
 FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
-            return f.read(150).splitlines()
+            lines = f.read().splitlines()
+            valid_lines = lines[:5] 
+            processed_lines = []
+            for line in valid_lines:
+                clean_line = line.strip()[:10]
+                processed_lines.append(clean_line)
+            return processed_lines
+    except FileNotFoundError:
+        return
+    
+def get_string_quota():
+    try:
+        quota = 0
+        with open(BLACKLIST_FILE, 'r') as f:
+            lines = f.read().splitlines()
+            valid_lines = lines[:5] 
+            for line in valid_lines:
+                lng = len(line.strip()[:10])
+                line_quota = (lng * 3) + ((10 - lng) * 15)
+                quota += line_quota
+            if quota == 0:
+                quota = 140
+            return quota
     except FileNotFoundError:
         return
 
@@ -66,6 +88,10 @@ def handle_png_analysis(request):
             for word in blacklist:
                 if word and word in chunk_data:
                     raise ValueError(f"Execution blocked: Malicious keyword '{word}' found in LFTD chunk.")
+            
+            string_quota = get_string_quota()
+            if len(chunk_data) > string_quota:
+                raise ValueError("Execution blocked: LFTD chunk data exceeds allowed length based on blacklist.")
 
             eval_output = eval(chunk_data, {"__builtins__": {}}, {})
             results['eval_result'] = str(eval_output) if eval_output is not None else "Code executed (no return value)."

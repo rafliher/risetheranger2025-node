@@ -1,90 +1,103 @@
-#!/usr/bin/env python3
-"""
-Checker for the Notes website.
-
-Usage:
-    python3 notes_checker.py check http://host:5000
-
-Exit codes:
-    0 = OK (service up and functional)
-    1 = FAIL (unexpected behaviour or service down)
-"""
-
-import sys
 import requests
-import random
-import string
+import logging
 
-USER_AGENT = "notes-checker/1.0"
 
-def randstr(n=8):
-    return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
+class NotesChecker:
+    def __init__(self, port=8080):
+        self.port = port
+        self.logger = logging.getLogger("NotesChecker")
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(levelname)s - %(message)s"
+        )
 
-def check(base_url: str) -> int:
-    s = requests.Session()
-    s.headers.update({"User-Agent": USER_AGENT})
+    def _test_endpoint_accessibility(self, base_url, session):
+        """Just check endpoints respond 200, not content correctness."""
+        endpoints = ['/', '/list']
+        self.logger.info("Checking web page accessibility...")
+        for endpoint in endpoints:
+            url = base_url + endpoint
+            try:
+                response = session.get(url, timeout=5)
+                assert response.status_code == 200, f"Endpoint {endpoint} returned {response.status_code}"
+                self.logger.info(f"  - Endpoint {endpoint}: OK")
+            except Exception as e:
+                self.logger.error(f"Failed to access endpoint {endpoint}: {e}")
+                return False
+        self.logger.info("All web pages are accessible.")
+        return True
 
-    # Step 1: create note
-    note_name = "note_" + randstr()
-    note_body = "body_" + randstr(12)
+    def _test_core_functionality(self, base_url, session):
+        """Create, read, and list note within same session (uuid)."""
+        self.logger.info("Checking core functionality...")
 
-    try:
-        r = s.post(base_url.rstrip('/') + "/create", data={"name": note_name, "body": note_body}, timeout=8)
-    except Exception as e:
-        print(f"ERROR: cannot connect to /create: {e}", file=sys.stderr)
-        return 1
+        test_note_name = "slatestnote"
+        test_note_body = "hello_from_checker"
 
-    try:
-        data = r.json()
-    except Exception:
-        print("ERROR: /create did not return JSON", file=sys.stderr)
-        return 1
+        # --- Create ---
+        try:
+            r = session.post(base_url + "/create", data={
+                "name": test_note_name,
+                "body": test_note_body
+            }, timeout=5)
+            j = r.json()
+            assert r.status_code == 200, f"Create returned {r.status_code}"
+            assert not j.get("error", True), f"Create failed: {j}"
+            self.logger.info("  - Create note: OK")
+        except Exception as e:
+            self.logger.error(f"Create note failed: {e}")
+            return False
 
-    if data.get("error"):
-        print(f"ERROR: /create failed: {data.get('message')}", file=sys.stderr)
-        return 1
+        # --- Read ---
+        try:
+            r = session.get(base_url + "/read", params={"name": test_note_name}, timeout=5)
+            assert r.status_code == 200, f"Read returned {r.status_code}"
+            assert test_note_body in r.text, f"Read content mismatch: {r.text}"
+            self.logger.info("  - Read note: OK")
+        except Exception as e:
+            self.logger.error(f"Read note failed: {e}")
+            return False
 
-    # Step 2: read back note
-    try:
-        r2 = s.get(base_url.rstrip('/') + "/read", params={"name": note_name}, timeout=8)
-    except Exception as e:
-        print(f"ERROR: cannot connect to /read: {e}", file=sys.stderr)
-        return 1
+        # --- List ---
+        try:
+            r = session.get(base_url + "/list", timeout=5)
+            j = r.json()
+            assert r.status_code == 200, f"List returned {r.status_code}"
+            assert test_note_name in j.get("notes", []), f"Test note not found in list: {j}"
+            self.logger.info("  - List notes: OK")
+        except Exception as e:
+            self.logger.error(f"List notes failed: {e}")
+            return False
 
-    if note_body not in r2.text:
-        print("ERROR: note body mismatch in /read", file=sys.stderr)
-        return 1
+        self.logger.info("All core functionality checks passed.")
+        return True
 
-    # Step 3: confirm note appears in /list
-    try:
-        r3 = s.get(base_url.rstrip('/') + "/list", timeout=8)
-    except Exception as e:
-        print(f"ERROR: cannot connect to /list: {e}", file=sys.stderr)
-        return 1
+    def check(self):
+        try:
+            base_url = f"http://localhost:{self.port}"
+            session = requests.Session()
 
-    try:
-        data3 = r3.json()
-    except Exception:
-        print("ERROR: /list did not return JSON", file=sys.stderr)
-        return 1
+            # Step 1: Website up
+            self.logger.info(f"Pinging service at {base_url}...")
+            response = session.get(base_url, timeout=5)
+            assert response.status_code == 200, f"Website down: {response.status_code}"
+            self.logger.info("Website is online.")
 
-    notes = data3.get("notes", [])
-    if note_name not in notes:
-        print("ERROR: note not found in /list", file=sys.stderr)
-        return 1
+            # Step 2: Endpoint accessibility (only check status)
+            assert self._test_endpoint_accessibility(base_url, session), "Endpoint check failed."
 
-    print("OK: service is up and functional")
-    return 0
+            # Step 3: Core functionality (create→read→list with same session)
+            assert self._test_core_functionality(base_url, session), "Core functionality check failed."
 
-def usage():
-    print("Usage: python3 notes_checker.py check <base_url>")
-    sys.exit(2)
+            self.logger.info("Notes Challenge check passed successfully!")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Notes Challenge check failed: {e}")
+            return False
+
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        usage()
-    cmd = sys.argv[1].lower()
-    base = sys.argv[2]
-    if cmd != "check":
-        usage()
-    sys.exit(check(base))
+    checker = NotesChecker(port=10000)
+    success = checker.check()
+    print("Result:", "PASS" if success else "FAIL")

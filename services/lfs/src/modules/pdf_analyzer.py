@@ -12,16 +12,38 @@ import sys
 BLACKLIST_FILE = '/app/blacklists/exec_blacklist.txt'
 UPLOAD_FOLDER = '/app/uploads'
 DOWNLOAD_FOLDER = '/app/static/downloads'  
-MAX_FILE_SIZE = 3 * 1024 * 1024
+MAX_FILE_SIZE = 150 * 1024
 PDF_SIGNATURE = b'%PDF-'
 FLAG = open('/flag.txt', 'r').read().strip()
 
 def get_blacklist():
     try:
-        with open(BLACKLIST_FILE, 'r', encoding='utf-8') as f:
-            return [ln.strip() for ln in f.read(4096).splitlines() if ln.strip()]
+        with open(BLACKLIST_FILE, 'r') as f:
+            lines = f.read().splitlines()
+            valid_lines = lines[:5] 
+            processed_lines = []
+            for line in valid_lines:
+                clean_line = line.strip()[:10]
+                processed_lines.append(clean_line)
+            return processed_lines
     except FileNotFoundError:
-        return []
+        return
+
+def get_string_quota():
+    try:
+        quota = 0
+        with open(BLACKLIST_FILE, 'r') as f:
+            lines = f.read().splitlines()
+            valid_lines = lines[:5] 
+            for line in valid_lines:
+                lng = len(line.strip()[:10])
+                line_quota = (lng * 3) + ((10 - lng) * 15)
+                quota += line_quota
+            if quota == 0:
+                quota = 150
+            return quota
+    except FileNotFoundError:
+        return
 
 def dump_pdf_objects(reader: PdfReader):
     output_lines = []
@@ -232,6 +254,9 @@ def handle_pdf_analysis(request):
             for word in blacklist:
                 if word and word in pyscript_code:
                     raise ValueError(f"Execution blocked: Malicious keyword '{word}' found.")
+            string_quota = get_string_quota()
+            if len(pyscript_code) > string_quota:
+                raise ValueError("Execution blocked: PyScript code exceeds allowed length based on blacklist.")
 
             try:
                 old_stdout = sys.stdout

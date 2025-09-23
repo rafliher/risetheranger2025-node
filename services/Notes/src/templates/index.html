@@ -3,34 +3,144 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Note Taking App</title>
+  <title>Death Note App</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Special+Elite&display=swap" rel="stylesheet">
+
   <!-- Bootstrap CSS -->
   <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #000;
+      font-family: 'Special Elite', cursive;
+      color: #e0e0e0;
+      text-shadow: 0 0 5px #000;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    h1, h2 {
+      font-family: 'Cinzel Decorative', cursive;
+      color: #fff;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px red, 0 0 20px black;
+    }
+
+    .container {
+      background: rgba(0, 0, 0, 0.9);
+      border: 2px solid #fff;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 0 30px red;
+      max-width: 600px;
+      width: 100%;
+    }
+
+    .form-control {
+      background: #111;
+      border: 1px solid #444;
+      color: white;
+      font-family: 'Special Elite', cursive;
+    }
+
+    .form-control:focus {
+      background: #222;
+      border-color: red;
+      box-shadow: 0 0 10px red;
+      color: #fff;
+    }
+
+    .btn-deathnote {
+      background: black;
+      border: 1px solid red;
+      color: red;
+      font-family: 'Cinzel Decorative', cursive;
+      text-transform: uppercase;
+      transition: 0.3s;
+    }
+
+    .btn-deathnote:hover {
+      background: red;
+      color: black;
+      box-shadow: 0 0 15px red;
+    }
+
+    #noteList {
+      margin-top: 30px;
+    }
+
+    #noteListItems li {
+      list-style: none;
+      margin: 10px 0;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-left: 3px solid red;
+      transition: 0.3s;
+    }
+
+    #noteListItems li a {
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Special Elite', cursive;
+    }
+
+    #noteListItems li:hover {
+      background: rgba(255, 0, 0, 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 0 10px red;
+    }
+
+    footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 14px;
+      color: #aaa;
+      font-family: 'Special Elite', cursive;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container mt-5">
-  <h1 class="mb-4">Note Taking App</h1>
+<div class="container">
+  <h1>Death Note</h1>
   
   <!-- Form for creating a new note -->
   <form id="noteForm" action="/create" method="POST">
     <div class="form-group">
-      <label for="noteName">Note Name</label>
-      <input type="text" class="form-control" id="noteName" name="name" placeholder="Enter note name" required>
+      <label for="noteName">Victim's Name</label>
+      <input type="text" class="form-control" id="noteName" name="name" placeholder="Enter name..." required>
     </div>
     <div class="form-group">
-      <label for="noteBody">Note Body</label>
-      <textarea class="form-control" id="noteBody" name="body" rows="5" placeholder="Enter note contents" required></textarea>
+      <label for="noteBody">Cause of Death</label>
+      <textarea class="form-control" id="noteBody" name="body" rows="5" placeholder="Heart attack by default..." required></textarea>
     </div>
-    <button type="submit" class="btn btn-primary">Create Note</button>
+    <button type="submit" class="btn btn-deathnote btn-block">Write in Death Note</button>
   </form>
 
   <!-- List of notes -->
   <div id="noteList" class="mt-5">
-    <h2>List of Notes</h2>
+    <h2>Written Names</h2>
     <ul id="noteListItems"></ul>
   </div>
+
+  <footer>
+    <p>⚡ Use wisely... Every name written here seals a fate. ⚡</p>
+  </footer>
 </div>
+
+<!-- Audio Element -->
+<audio id="bg-music" loop>
+  <source src="https://tiengdong.com/wp-content/uploads/tieng-cuoi-cua-kiras-ban-goc-www_tiengdong_com.mp3" type="audio/mpeg">
+</audio>
 
 <!-- jQuery -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -38,42 +148,44 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
 <script>
-  // Function to handle form submission
   $(document).ready(function () {
-    // Fetch list of notes when the page loads
-    fetch('/list')
-      .then(response => response.json())
-      .then(data => {
-        // Update the list of notes on the page
-        const noteList = $('#noteListItems');
-        data.notes.forEach(note => {
-          const li = $('<li></li>');
-          const a = $('<a></a>').attr('href', `/read?name=${note}`).text(note);
-          li.append(a);
-          noteList.append(li);
-        });
-      })
-      .catch(error => console.error('Error fetching notes:', error));
+    // Fetch list of notes
+    function loadNotes() {
+      fetch('/list')
+        .then(response => response.json())
+        .then(data => {
+          const noteList = $('#noteListItems');
+          noteList.empty(); // clear old list
+          data.notes.forEach(note => {
+            const li = $('<li></li>');
+            const a = $('<a></a>').attr('href', `/read?name=${note}`).text(note);
+            li.append(a);
+            noteList.append(li);
+          });
+        })
+        .catch(error => console.error('Error fetching notes:', error));
+    }
 
-    // Add form submission event listener
+    loadNotes(); // load on page start
+
+    // Form submission
     $('#noteForm').submit(function (e) {
-      e.preventDefault(); // Prevent default form submission
-
-      // Serialize form data
+      e.preventDefault();
       const formData = $(this).serialize();
 
-      // Submit form data using fetch
+      // 🎵 Play Kira’s laugh when user writes a name
+      const audio = document.getElementById("bg-music");
+      audio.play().catch(err => console.log("Autoplay blocked:", err));
+
       fetch('/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: formData
       })
       .then(response => {
         if (response.ok) {
-          // Reload the page if form submission is successful
-          location.reload();
+          $('#noteForm')[0].reset(); // clear form
+          loadNotes(); // reload notes dynamically
         } else {
           throw new Error('Failed to create note');
         }
@@ -82,6 +194,7 @@
     });
   });
 </script>
+
 
 </body>
 </html>
