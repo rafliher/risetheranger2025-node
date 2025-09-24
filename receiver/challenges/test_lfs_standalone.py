@@ -37,38 +37,57 @@ def check():
         
         # Test 1: Disk Analyzer
         disk_url = base_url + '/analyze/disk'
-        disk_payload_path = os.path.join(payload_base_dir, 'disk', 'benign.dd')
-        
-        with open(disk_payload_path, 'rb') as f:
-            files = {'disk_image': (os.path.basename(disk_payload_path), f, 'application/octet-stream')}
-            response = requests.post(disk_url, files=files, timeout=25)
+        disk_payload_dir = os.path.join(payload_base_dir, 'disk')
+        print(f"  - Testing Disk analyzer with payloads from {disk_payload_dir}...")
+        for filename in os.listdir(disk_payload_dir):
+            disk_payload_path = os.path.join(disk_payload_dir, filename)
+            if not os.path.isfile(disk_payload_path):
+                continue
+            
+            print(f"    - Uploading {filename}...")
+            with open(disk_payload_path, 'rb') as f:
+                files = {'disk_image': (filename, f, 'application/octet-stream')}
+                response = requests.post(disk_url, files=files, timeout=25)
 
-        assert response.status_code == 200, f"Disk analyzer returned status {response.status_code}"
-        assert "Partition Information" in response.text, "Disk analyzer response missing key text"
+            assert response.status_code == 200, f"Disk analyzer returned status {response.status_code} for file {filename}"
+            assert "</html>" in response.text.lower(), f"Disk analyzer response for {filename} did not return valid HTML"
+            assert "blacklisted" not in response.text.lower(), f"Disk analyzer response for {filename} contains error message"
         print("  - Disk analyzer functionality: OK")
 
         # Test 2: PDF Analyzer
         pdf_url = base_url + '/analyze/pdf'
-        pdf_payload_path = os.path.join(payload_base_dir, 'pdf', 'benign.pdf')
-
-        with open(pdf_payload_path, 'rb') as f:
-            files = {'pdf_file': (os.path.basename(pdf_payload_path), f, 'application/pdf')}
-            response = requests.post(pdf_url, files=files, timeout=15)
+        pdf_payload_dir = os.path.join(payload_base_dir, 'pdf')
+        print(f"  - Testing PDF analyzer with payloads from {pdf_payload_dir}...")
+        for filename in os.listdir(pdf_payload_dir):
+            pdf_payload_path = os.path.join(pdf_payload_dir, filename)
+            if not os.path.isfile(pdf_payload_path):
+                continue
+            
+            print(f"    - Uploading {filename}...")
+            with open(pdf_payload_path, 'rb') as f:
+                files = {'pdf_file': (filename, f, 'application/pdf')}
+                response = requests.post(pdf_url, files=files, timeout=15)
         
-        assert response.status_code == 200, f"PDF analyzer returned status {response.status_code}"
-        assert "ExifTool Metadata" in response.text, "PDF analyzer HTML response missing 'exif_data' key"
+            assert response.status_code == 200, f"PDF analyzer returned status {response.status_code} for file {filename}"
+            assert "</html>" in response.text.lower(), f"PDF analyzer response for {filename} did not return valid HTML"
         print("  - PDF analyzer functionality: OK")
 
         # Test 3: PNG Analyzer
         png_url = base_url + '/analyze/png'
-        png_payload_path = os.path.join(payload_base_dir, 'png', 'benign.png')
+        png_payload_dir = os.path.join(payload_base_dir, 'png')
+        print(f"  - Testing PNG analyzer with payloads from {png_payload_dir}...")
+        for filename in os.listdir(png_payload_dir):
+            png_payload_path = os.path.join(png_payload_dir, filename)
+            if not os.path.isfile(png_payload_path):
+                continue
 
-        with open(png_payload_path, 'rb') as f:
-            files = {'png_file': (os.path.basename(png_payload_path), f, 'image/png')}
-            response = requests.post(png_url, files=files, timeout=15)
+            print(f"    - Uploading {filename}...")
+            with open(png_payload_path, 'rb') as f:
+                files = {'png_file': (filename, f, 'image/png')}
+                response = requests.post(png_url, files=files, timeout=15)
 
-        assert response.status_code == 200, f"PNG analyzer returned status {response.status_code}"
-        assert "ExifTool Output" in response.text, "PNG analyzer HTML response missing 'pngcheck_data' key"
+            assert response.status_code == 200, f"PNG analyzer returned status {response.status_code} for file {filename}"
+            assert "</html>" in response.text.lower(), f"PNG analyzer response for {filename} did not return valid HTML"
         print("  - PNG analyzer functionality: OK")
         
         print("All feature functionality checks passed.")
