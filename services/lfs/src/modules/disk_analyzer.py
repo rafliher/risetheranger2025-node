@@ -11,19 +11,15 @@ MAX_FILE_SIZE = 6 * 1024 * 1024
 ALLOWED_EXTENSION = '.dd'
 FLAG = open('/flag.txt', 'r').read().strip()
 
-def onlyoneortwolenchars(s):
-    return len(s) <= 2
 
 def get_blacklist():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
             lines = f.read().splitlines()
-            valid_lines = lines[:5] 
+            valid_lines = lines[:6] 
             processed_lines = []
             for line in valid_lines:
                 clean_line = line.strip()[:10]
-                if onlyoneortwolenchars(clean_line):
-                    continue
                 processed_lines.append(clean_line)
             return processed_lines
     except FileNotFoundError:
@@ -33,13 +29,10 @@ def get_string_quota():
     try:
         with open(BLACKLIST_FILE, 'r') as f:
             lines = f.read().splitlines()
-            valid_lines = lines[:5]
+            valid_lines = lines[:6]
             quota = 0
             for line in valid_lines:
                 lng = len(line.strip()[:10])
-                clean_line = line.strip()[:10]
-                if onlyoneortwolenchars(clean_line):
-                    continue
                 line_quota = (lng * 3) + ((10 - lng) * 88)
                 quota += line_quota
             if quota == 0:
@@ -70,7 +63,7 @@ def handle_disk_analysis(request):
     file.save(filepath)
 
 
-    template_string = ""
+    html_parts = []
 
     try:
 
@@ -79,17 +72,16 @@ def handle_disk_analysis(request):
             exif_data = exif_process.stdout if exif_process.returncode != 0 else f"ExifTool Error: {exif_process.stderr}"
 
             safe_exif_data = escape(exif_data)
-            template_string += f"""
+            html_parts.append(f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">ExifTool Metadata:</h3>
                 <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">{safe_exif_data}</pre>
-            """
-            render_template_string(template_string)
+            """)
         except Exception as exif_e:
             safe_exif_e = escape(str(exif_e))
-            template_string += f"""
+            html_parts.append(f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">ExifTool Metadata:</h3>
                 <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Failed to run ExifTool: {safe_exif_e}</pre>
-            """
+            """)
 
         partition_info_str = ""
         ls_result_str = ""
@@ -138,6 +130,7 @@ def handle_disk_analysis(request):
                     f.seek(3)
                     signature = f.read(4)
                     if signature != b'NTFS':
+                        signature = escape(signature.decode(errors='replace'))
                         raise ValueError(f"File does not have a valid NTFS signature at the beginning of the file (found: {signature!r}).")
 
                 fls_process = subprocess.run(['fls', '-r', '-o', '0', filepath], capture_output=True, text=True, timeout=20)
@@ -150,72 +143,55 @@ def handle_disk_analysis(request):
 
         try:
             safe_partition_info = escape(partition_info_str)
-            template_string += f"""
+            html_parts.append(f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">Partition Information:</h3>
                 <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">{safe_partition_info}</pre>
-            """
-            render_template_string(template_string)
+            """)
         except Exception as partition_render_e:
             safe_partition_render_e = escape(str(partition_render_e))
-            template_string += f"""
+            html_parts.append(f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">Partition Information:</h3>
-                <pre>Failed to render partition information: {safe_partition_render_e}</pre><
-            """
+                <pre>Failed to render partition information: {safe_partition_render_e}</pre>
+            """)
 
         
         if ls_result_str and not ls_result_str.startswith("Analysis Failed"):
             blacklist = get_blacklist()
+            print("Blacklist for file listing check:", blacklist, flush=True)
             if blacklist:
                 for word in blacklist:
                     if word and word in ls_result_str:
-                        raise ValueError("File listing contains a blacklisted keyword.")
+                        raise ValueError(f"File listing contains a blacklisted keyword: {word}")
             
             string_quota = get_string_quota()
+            print("String quota for file listing:", string_quota, flush=True)
+            print("ls_result", len(ls_result_str), flush=True)
             if len(ls_result_str) > string_quota:
                 raise ValueError("File listing output exceeds allowed length based on blacklist.")
 
         try:
-            ls_res = f"""
+            ls_template = f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">File Listing:</h3>
                 <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">{ls_result_str}</pre>
             """
-            render_template_string(ls_res)
-            template_string += ls_res
+            rendered_ls_html = render_template_string(ls_template)
+            html_parts.append(rendered_ls_html)
         except Exception as ls_render_e:
             safe_ls_render_e = escape(str(ls_render_e))
-            template_string += f"""
+            html_parts.append(f"""
                 <h3 class="text-2xl font-bold text-white mt-8 mb-4">File Listing:</h3>
                 <pre class="bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto whitespace-pre-wrap break-words">Failed to render the file list: {safe_ls_render_e}</pre>
-            """
+            """)
 
-        try:
-            return render_template_string(template_string)
-        except Exception as ssti_e:
-            safe_ssti_e = escape(str(ssti_e))
-
-            safe_original_template = escape(template_string)
-
-            final_template = f"""
-                <h3>Analysis Output (Render Failed)</h3>
-                <div class="result-box">
-                    <pre>{safe_original_template}</pre>
-                </div>
-                
-                <hr>
-                
-                <div class="callout callout-danger">
-                    <h4>Rendering Error Details</h4>
-                    <pre>{safe_ssti_e}</pre>
-                </div>
-            """
-            return final_template
+        return "".join(html_parts)
+        
     except Exception as e:
         safe_e = escape(str(e))
-        template_string += f"""
+        error_template = f"""
             <h3>Fatal Error:</h3>
             <div class="result-box"><pre>A critical error occurred: {safe_e}</pre></div>
         """
-        return render_template_string(template_string)
+        return render_template_string(error_template)
 
     finally:
         if os.path.exists(temp_dir):
