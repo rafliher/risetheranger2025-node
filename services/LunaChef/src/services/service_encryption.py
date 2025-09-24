@@ -3,7 +3,7 @@ Encryption Service
 
 patching_notes:
 - keep this line: 
-    from config import key
+    from config import key, FLAG
     encryption_service = EncryptionService(key)
 - keep class base structure and methods:
     class EncryptionService:
@@ -2955,14 +2955,15 @@ class EncryptionService:
                     'success': False,
                     'error': 'Decryption failed: Hash mismatch'
                 }
-                   
+            
+            # for SLA check give the flag on Suffix
             if not decrypted_message.startswith(FLAG):
                 return {
                     'success': False,
                     'error': 'Decryption failed: Invalid flag'
                 }
-                
             decrypted_message = decrypted_message[len(FLAG):].decode()
+            # end for SLA check give the flag on Suffix
             
             return {
                 'success': True,

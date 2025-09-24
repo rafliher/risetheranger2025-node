@@ -1,0 +1,22 @@
+def _keygen_until_invertible(self):
+    tries = 0
+    while True:
+        tries += 1
+        f_candidate = [random.randint(1, q-1) for _ in range(n)]
+        try:
+            inv_f = poly_inv_mod_xn1(f_candidate)
+        except Exception:
+            continue
+        g_candidate = sample_small_poly(self.small_bound)
+        h_candidate = negacyclic_mul(g_candidate, inv_f)
+        self.f = [x % q for x in f_candidate]
+        self.g = [x % q for x in g_candidate]
+        self.F = sample_small_poly(self.small_bound)
+        self.G = sample_small_poly(self.small_bound)
+        self.h = [x % q for x in h_candidate]
+        print(self.f)
+        print(self.g)
+        print(self.F)
+        print(self.G)
+        print(self.h)
+        break

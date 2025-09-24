@@ -25,20 +25,45 @@ def check():
             url = f'http://{host}:{port}{endpoint}'
             r = session.get(url, timeout=5)
             assert r.status_code == 200, f'Failed to fetch {url}, status {r.status_code}'
-
-        # Step 2: get key from container
+            
+        # Step 2: Check if the flag still exists and matches the one in the container
+        with open('../flags/lunachef.txt', 'r') as f:
+            host_flag = f.read().strip()
+        container_flag = subprocess.run(
+            ["docker", "exec", container_name, "cat", "/flag.txt"],
+            capture_output=True,
+            text=True
+        ).stdout.strip()
+        assert host_flag == container_flag, 'Flag mismatch between host and container'
+        
+        # Step 3: get key from container
         container_key = subprocess.run(
             ["docker", "exec", container_name, "cat", "/app/config/__init__.py"],
             capture_output=True,
             text=True
         ).stdout.strip()
         assert container_key, 'Key not found in container config.py'
-        scope = {}
+        scope = {
+            'FLAG': container_flag.encode()
+        }
         exec(container_key, {}, scope)
         encryption_key = scope.get('key', None)
         assert encryption_key, 'Key variable not found in container config.py'
+        signing_key = scope.get('signing_key', None)
+        assert signing_key, 'signing_key variable not found in container config.py'
+        hash_key = scope.get('hash_key', None)
+        assert hash_key, 'hash_key variable not found in container config.py'
         
-        # Step 3: Test core functionality of encrypt decrypt crypto service
+        # Setting environment for imported modules
+        config = types.ModuleType("config")
+        config.key = encryption_key
+        config.signing_key = signing_key
+        config.hash_key = hash_key
+        config.FLAG = container_flag.encode()
+        sys.modules["config"] = config
+        
+        
+        # Step 4: Test core functionality of encrypt decrypt crypto service
         endpoint_encrypt = f'http://{host}:{port}/encrypt'
         endpoint_decrypt = f'http://{host}:{port}/decrypt'
         endpoint_script = f'http://{host}:{port}/scripts/encryption'
@@ -56,9 +81,6 @@ def check():
         assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
         source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
         source_code_decoding = html.unescape(source_code)
-        config = types.ModuleType("config")
-        config.key = encryption_key
-        sys.modules["config"] = config
         exec(source_code_decoding, scope, scope)
         encryptionModule = scope.get('encryption_service', None)
         module_encrypted_text = encryptionModule.encrypt(test_text)
@@ -67,58 +89,48 @@ def check():
         module_decrypted_text = encryptionModule.decrypt(endpoint_encrypted_data)
         assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Endpoint'
         
-        # # Step 4: Test core functionality of sign verify crypto service
-        # endpoint_sign = f'http://{host}:{port}/sign'
-        # endpoint_verify = f'http://{host}:{port}/verify'
-        # endpoint_script = f'http://{host}:{port}/scripts/signing'
-        # test_data = f"TestData-{int(time.time())}"
-        # r = session.post(endpoint_sign, data={'data': test_data}, timeout=5)
-        # assert r.status_code == 200, f'Signing request failed, status {r.status_code}'
-        # resp_json = r.json()
-        # endpoint_signature = resp_json.get('signature', '')
-        # r = session.post(endpoint_verify, data={'data': test_data, 'signature': endpoint_signature}, timeout=5)
-        # assert r.status_code == 200, f'Verification request failed, status {r.status_code}'
-        # resp_json = r.json()
-        # assert resp_json.get('valid', False), 'Signature verification failed'
-        # r = session.get(endpoint_script, timeout=5)
-        # assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
-        # source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
-        # source_code_decoding = html.unescape(source_code)
-        # exec(source_code_decoding, scope, scope)
-        # signingModule = scope.get('signing_service', None)
-        # module_signature = signingModule.sign(test_data)
-        # module_verification = signingModule.verify(test_data, module_signature['signature'])
-        # assert module_verification['valid'], 'Module signature verification failed'
-        # module_verification = signingModule.verify(test_data, endpoint_signature)
-        # assert module_verification['valid'], 'Endpoint signature verification failed'
+        # Step 4: Test core functionality of sign verify crypto service
+        endpoint_sign = f'http://{host}:{port}/sign'
+        endpoint_verify = f'http://{host}:{port}/verify'
+        endpoint_script = f'http://{host}:{port}/scripts/signing'
+        test_data = f"TestData-{int(time.time())}"
+        r = session.post(endpoint_sign, data={'data': test_data}, timeout=5)
+        assert r.status_code == 200, f'Signing request failed, status {r.status_code}'
+        resp_json = r.json()
+        endpoint_signature = resp_json.get('signature', '')
+        r = session.post(endpoint_verify, data={'data': test_data, 'signature': endpoint_signature}, timeout=5)
+        assert r.status_code == 200, f'Verification request failed, status {r.status_code}'
+        resp_json = r.json()
+        assert resp_json.get('valid', False), 'Signature verification failed'
+        r = session.get(endpoint_script, timeout=5)
+        assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
+        source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
+        source_code_decoding = html.unescape(source_code)
+        exec(source_code_decoding, scope, scope)
+        signingModule = scope.get('signing_service', None)
+        module_signature = signingModule.sign(test_data)
+        module_verification = signingModule.verify(module_signature['signature'], test_data)
+        assert module_verification['valid'], 'Module signature verification failed'
+        # print(endpoint_signature)
+        module_verification = signingModule.verify(endpoint_signature, test_data)
+        assert module_verification['valid'], 'Endpoint signature verification failed'
         
-        # # Step 5: Test core functionality of hash crypto service
-        # endpoint_hash = f'http://{host}:{port}/hash'
-        # endpoint_script = f'http://{host}:{port}/scripts/hash'
-        # test_data = f"TestData-{int(time.time())}"
-        # r = session.post(endpoint_hash, data={'data': test_data}, timeout=5)
-        # assert r.status_code == 200, f'Hashing request failed, status {r.status_code}'
-        # resp_json = r.json()
-        # endpoint_hash_value = resp_json.get('hash', '')
-        # r = session.get(endpoint_script, timeout=5)
-        # assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
-        # source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
-        # source_code_decoding = html.unescape(source_code)
-        # exec(source_code_decoding, scope, scope)
-        # hashingModule = scope.get('hashing_service', None)
-        # module_hash_value = hashingModule.hash(test_data)
-        # assert module_hash_value['hash'] == endpoint_hash_value, 'Hash values do not match between module and endpoint'
-        
-        # Step 6: Check if the flag still exists and matches the one in the container
-        with open('../flags/lunachef.txt', 'r') as f:
-            host_flag = f.read().strip()
-        container_flag = subprocess.run(
-            ["docker", "exec", container_name, "cat", "/flag.txt"],
-            capture_output=True,
-            text=True
-        ).stdout.strip()
-        
-        assert host_flag == container_flag, 'Flag mismatch between host and container'
+        # Step 5: Test core functionality of hash crypto service
+        endpoint_hash = f'http://{host}:{port}/hash'
+        endpoint_script = f'http://{host}:{port}/scripts/hash'
+        test_data = f"TestData-{int(time.time())}"
+        r = session.post(endpoint_hash, data={'data': test_data}, timeout=5)
+        assert r.status_code == 200, f'Hashing request failed, status {r.status_code}'
+        resp_json = r.json()
+        endpoint_hash_value = resp_json.get('hash', '')
+        r = session.get(endpoint_script, timeout=5)
+        assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
+        source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
+        source_code_decoding = html.unescape(source_code)
+        exec(source_code_decoding, scope, scope)
+        hashingModule = scope.get('hashing_service', None)
+        module_hash_value = hashingModule.hash(test_data)
+        assert module_hash_value['hash'] == endpoint_hash_value, 'Hash values do not match between module and endpoint'
 
         print('Check passed for Lunachef')
         return True

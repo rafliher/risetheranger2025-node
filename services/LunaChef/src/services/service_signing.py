@@ -3,7 +3,7 @@ Signing Service
 
 patching_notes:
 - keep this line: 
-    from config import signing_key
+    from config import signing_key, FLAG
     signing_service = SigningService()
 - keep class base structure and methods:
     class SigningService:
@@ -11,15 +11,23 @@ patching_notes:
     def verify(self, signature, message) -> bool:
 - dont change structure or remote config.py (you can change the values)
 - dont change features on application
+- dont change suffix FLAG and ke on first sha256 hashlib
+- dont change base and random seed if you use random
 """
 
 import hashlib
 import random
+import secrets
+import math
 from typing import List, Tuple
 from config import signing_key, FLAG
 
-q = 12 * 1024 + 1
-n = 64
+# for SLA check keep the same random seed
+random.seed(signing_key['random_seed'])
+# end for SLA check keep the same random seed
+
+q = signing_key['q']
+n = signing_key['n']
 
 def trim(p: List[int]) -> List[int]:
     while len(p) > 1 and p[-1] % q == 0:
@@ -151,7 +159,30 @@ def hash_to_poly(msg: bytes) -> List[int]:
     return out[:n]
 
 def sample_small_poly(bound: int) -> List[int]:
-    return [random.randint(-bound, bound) for _ in range(n)]
+    if bound <= 0:
+        return [0 for _ in range(n)]
+
+    if bound >= 5:
+        sigma = bound / 5.0
+    else:
+        sigma = max(1.5, bound / 2.0)
+
+    def _u01() -> float:
+        r = secrets.randbits(53)
+        return (r + 1) / (2**53 + 1)
+
+    def _gauss0() -> float:
+        u1 = _u01()
+        u2 = _u01()
+        return math.sqrt(-2.0 * math.log(u1)) * math.cos(2.0 * math.pi * u2)
+
+    out: List[int] = []
+    while len(out) < n:
+        z = _gauss0()
+        x = int(round(z * sigma))
+        if -bound <= x <= bound:
+            out.append(x)
+    return out
 
 def poly_to_hex(p):
     """Convert polynomial/vector to single hex string"""
@@ -163,68 +194,107 @@ def hex_to_poly(hs):
 
 
 class SigningService:
-    def __init__(self, small_bound: int = 4):
+    def __init__(self, small_bound: int = 4, signing_key=None):
         self.small_bound = small_bound
-        self.f = None
-        self.g = None
-        self.F = None
-        self.G = None
-        self.h = None
-        self._keygen_until_invertible()
-
-    def _keygen_until_invertible(self):
-        tries = 0
+        self.f = signing_key['f']
+        self.g = signing_key['g']
+        self.F = signing_key['F']
+        self.G = signing_key['G']
+        self.h = signing_key['h']
+        self.nonce4 = self.__keygen__fg_invertible(FLAG)
+        self.nonce3 = self.__keygen__invertible()
+        
+    def __keygen__fg_invertible(self, fg):
+        x = []
+        for i in range(len(fg)):
+            x.append(fg[i] % 12289)
+        
         while True:
-            tries += 1
-            f_candidate = [random.randint(1, q-1) for _ in range(n)]
+            y_candidate = x + [random.randint(1, q-1) for _ in range(n-len(x))]
             try:
-                inv_f = poly_inv_mod_xn1(f_candidate)
+                inv_y = poly_inv_mod_xn1(y_candidate)
+                return y_candidate
             except Exception:
                 continue
-            g_candidate = sample_small_poly(self.small_bound)
-            h_candidate = negacyclic_mul(g_candidate, inv_f)
-            self.f = [x % q for x in f_candidate]
-            self.g = [x % q for x in g_candidate]
-            self.F = sample_small_poly(self.small_bound)
-            self.G = sample_small_poly(self.small_bound)
-            self.h = [x % q for x in h_candidate]
-            break
 
-    def sign(self, message: bytes) -> Tuple[List[int], List[int]]:
-        message = message.encode()
+    def __keygen__invertible(self):
+        while True:
+            x_candidate = [random.randint(1, q-1) for _ in range(n)]
+            try:
+                inv_x = poly_inv_mod_xn1(x_candidate)
+                return x_candidate
+            except Exception:
+                continue
+            
+    def _sign_process(self, message: bytes) -> Tuple[List[int], List[int]]:
         m = hash_to_poly(message)
         s2 = sample_small_poly(self.small_bound)
         s2h = negacyclic_mul(s2, self.h)
-        s1 = poly_sub(m, s2h)
+        s1 = poly_sub(poly_sub(m, s2h), self.nonce4)
+        s1 = negacyclic_mul(s1, self.nonce3)
         s1 = [x % q for x in s1]
         s2 = [x % q for x in s2]
         sResult = poly_to_hex(s1) + poly_to_hex(s2)
-        
-        
-        # for SLA check give the flag on Suffix
-        # message_bytes = FLAG + message_bytes
-        # end for SLA check give the flag on Suffix
-        
-        result = {
-            "success": True,
-            "signature": sResult,
-        }
-        return result
-
-    def verify(self, signature, message) -> bool:
-        message = message.encode()
+        return sResult
+    
+    def _verify_process(self, signature, message) -> bool:
         s1, s2 = signature[:len(signature)//2], signature[len(signature)//2:]
         s1 = hex_to_poly(s1)
         s2 = hex_to_poly(s2)
         m = hash_to_poly(message)
         s2h = negacyclic_mul(s2, self.h)
-        lhs = poly_add(s1, s2h)
+        s1n3 = negacyclic_mul(s1, poly_inv_mod_xn1(self.nonce3))
+        s1n3 = poly_add(s1n3, self.nonce4)
+        lhs = poly_add(s1n3, s2h)
         lhs = [x % q for x in lhs]
         m = [x % q for x in m]
-        result = {
-            "success": True,
-            "valid": lhs == m,
-        }
-        return result
+        return lhs == m
+
+    def sign(self, message) -> Tuple[List[int], List[int]]:
+        try:
+            message = message.encode()
+            s = self._sign_process(message)
+            
+            # for SLA check sign the flag on Suffix
+            sFlag = self._sign_process(FLAG)
+            sRes = sFlag + s
+            # end for SLA check sign the flag on Suffix
+            
+            result = {
+                "success": True,
+                "signature": sRes,
+            }
+            return result
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'Verify failed: {str(e)}'
+            }
     
-signing_service = SigningService()
+
+    def verify(self, signature, message) -> bool:
+        try:
+            message = message.encode()
+            # for SLA check verify the flag on Suffix
+            sFlag, sRes = signature[:len(signature)//2], signature[len(signature)//2:]
+            resFlag = self._verify_process(sFlag, FLAG)
+            if(not resFlag):
+                return {
+                    "success": True,
+                    "valid": resFlag
+                }
+            # end for SLA check verify the flag on Suffix
+            
+            result = self._verify_process(sRes, message)
+            result = {
+                "success": True,
+                "valid": result,
+            }
+            return result
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'Verify failed: {str(e)}'
+            }
+    
+signing_service = SigningService(signing_key=signing_key)

@@ -3,7 +3,7 @@ Hashing Service
 
 patching_notes:
 - keep this line: 
-    from config import hash_key
+    from config import hash_key, FLAG
     hashing_service = HashingService()
 - keep class base structure and methods:
     class HashingService:
