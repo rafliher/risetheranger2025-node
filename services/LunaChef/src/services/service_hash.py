@@ -25,7 +25,7 @@ except Exception as e:
 # for SLA check Dont change the variables names or types and FLAG values
 
 import hashlib
-from config import hash_key, FLAG
+from config import hash_key
 
 class HashingService:
     def hash(self, message: str):

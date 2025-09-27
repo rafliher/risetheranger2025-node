@@ -28,7 +28,7 @@ import random
 import secrets
 import math
 from typing import List, Tuple
-from config import signing_key, FLAG
+from config import signing_key
 
 # for SLA check keep the same random seed
 random.seed(signing_key['random_seed'])
