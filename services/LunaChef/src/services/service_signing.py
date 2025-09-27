@@ -18,6 +18,7 @@ patching_notes:
 try:
     FLAG = open('/flag.txt').read().strip().encode()
 except Exception as e:
+    print(str(e))
     pass
 # for SLA check Dont change the variables names or types and FLAG values
 
