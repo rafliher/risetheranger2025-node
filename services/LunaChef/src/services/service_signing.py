@@ -202,7 +202,7 @@ class SigningService:
         self.F = signing_key['F']
         self.G = signing_key['G']
         self.h = signing_key['h']
-        self.nonce4 = self.__keygen__fg_invertible(FLAG)
+        self.nonce4 = self.negacyclic_mul(self.__keygen__fg_invertible(FLAG), self.f) 
         self.nonce3 = self.__keygen__invertible()
         
     def __keygen__fg_invertible(self, fg):
