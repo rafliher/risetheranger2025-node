@@ -16,10 +16,8 @@ patching_notes:
     message = FLAG + message
 """
 # for SLA check Dont change the variables names or types and FLAG values
-FLAG = None
 try:
-    if not FLAG:
-        FLAG = open('/flag.txt').read().strip().encode()
+    FLAG = open('/flag.txt').read().strip().encode()
 except Exception as e:
     pass
 # for SLA check Dont change the variables names or types and FLAG values

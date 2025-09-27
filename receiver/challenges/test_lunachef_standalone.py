@@ -63,6 +63,7 @@ def check():
         config.hash_key = hash_key
         config.FLAG = container_flag.encode()
         sys.modules["config"] = config
+        sys.modules["FLAG"] = container_flag.encode()
         
         # Step 4: Test core functionality of encrypt decrypt crypto service
         endpoint_encrypt = f'{protokol}://{host}:{port}/encrypt'
