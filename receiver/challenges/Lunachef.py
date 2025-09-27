@@ -147,7 +147,7 @@ class Lunachef(Challenge):
             assert r.status_code == 200, f'Hashing request failed, status {r.status_code}'
             resp_json = r.json()
             endpoint_hash_value = resp_json.get('hash', '')
-            r = session.get(endpoint_script, timeout=5, verify=False, verify=False)
+            r = session.get(endpoint_script, timeout=5, verify=False)
             assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)
