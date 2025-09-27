@@ -209,7 +209,7 @@ class SigningService:
         self.g = signing_key['g']
         self.h = signing_key['h']
         self.nonce4 = poly_sub(self.__keygen__fg_invertible(FLAG[len(FLAG)//2:]), self.f) 
-        self.nonce3 = self.__keygen__fg_invertible(:FLAG[len(FLAG)//2])
+        self.nonce3 = self.__keygen__fg_invertible(FLAG[:len(FLAG)//2])
         
     def __keygen__fg_invertible(self, fg):
         x = []
