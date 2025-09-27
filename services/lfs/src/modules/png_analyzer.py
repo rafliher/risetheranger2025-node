@@ -8,8 +8,8 @@ MAX_FILE_SIZE = 80 * 1024
 PNG_SIGNATURE = b'\x89PNG\r\n\x1a\n' 
 FLAG = open('/flag.txt', 'r').read().strip()
 
-def onlyoneortwolenchars(s):
-    return len(s) <= 2
+def onlyonelenchars(s):
+    return len(s) <= 1
 
 def get_blacklist():
     try:
@@ -19,7 +19,7 @@ def get_blacklist():
             processed_lines = []
             for line in valid_lines:
                 clean_line = line.strip()[:10]
-                if onlyoneortwolenchars(clean_line):
+                if onlyonelenchars(clean_line):
                     continue
                 processed_lines.append(clean_line)
             return processed_lines
@@ -35,7 +35,7 @@ def get_string_quota():
             for line in valid_lines:
                 lng = len(line.strip()[:10])
                 clean_line = line.strip()[:10]
-                if onlyoneortwolenchars(clean_line):
+                if onlyonelenchars(clean_line):
                     continue
                 line_quota = (lng * 3) + ((10 - lng) * 15)
                 quota += line_quota
@@ -58,7 +58,7 @@ def handle_png_analysis(request):
     file.seek(0, os.SEEK_END)
     file_size = file.tell()
     if file_size > MAX_FILE_SIZE:
-        return {'error': f"File size exceeds the maximum limit of {MAX_FILE_SIZE / 1024 / 1024}MB."}
+        return {'error': f"File size exceeds the maximum limit of {MAX_FILE_SIZE/ 1024}KB."}
     file.seek(0) 
 
     header = file.read(8)
