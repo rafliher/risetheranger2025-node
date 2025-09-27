@@ -1,12 +1,11 @@
 from flask import Blueprint, render_template, request, jsonify
-from services import encryption_service, signing_service, hashing_service
 
 from config import key
 from config import hash_key
 from config import signing_key
-from services.LunaChef.src.services.service_encryption import EncryptionService
-from services.LunaChef.src.services.service_hash import HashingService
-from services.LunaChef.src.services.service_signing import SigningService
+from services.service_encryption import EncryptionService
+from services.service_hash import HashingService
+from services.service_signing import SigningService
 
 # Create blueprint
 crypto_bp = Blueprint('crypto', __name__)
