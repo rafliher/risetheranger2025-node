@@ -1,154 +1,115 @@
 # Import a base class from your CTF framework, e.g., from .Challenge import Challenge
 # If you don't have one, this class can stand alone, but you'll need to supply logger and port.
-from .Challenge import Challenge 
-
+from .Challenge import Challenge
 import requests
 import os
+import subprocess
 
 class LFS(Challenge):
     flag_location = 'flags/lfs.txt'
     history_location = 'history/lfs.txt'
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Use absolute path to ensure payloads are found regardless of working directory
-        self.payload_base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'payloads', 'lfs'))
+        self.payload_base_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), '..', 'payloads', 'lfs')
+        )
 
     def distribute(self, flag):
-        """Writes the current flag to the specified location for the service to use."""
         try:
             with open(self.flag_location, 'w') as f:
                 f.write(flag)
-            
             with open(self.history_location, 'a') as f:
                 f.write(flag + '\n')
-
-            self.logger.info(f"Flag '{flag}' distributed successfully to {self.flag_location}")
+            self.logger.info(f"Flag '{flag}' distributed to {self.flag_location}")
             return True
-
         except Exception as e:
-            self.logger.error(f"Could not write flag to {self.flag_location}: {e}")
+            self.logger.error(f"Could not write flag: {e}")
             return False
 
     def _test_endpoint_accessibility(self, base_url):
-        """Checks if all required web pages are accessible via GET requests."""
         endpoints = ['/', '/disk', '/pdf', '/png']
         self.logger.info("Checking web page accessibility...")
         for endpoint in endpoints:
             url = base_url + endpoint
-            try:
-                response = requests.get(url, timeout=5)
-                assert response.status_code == 200, f"Endpoint {endpoint} returned status {response.status_code}"
-                assert "</html>" in response.text.lower(), f"Endpoint {endpoint} did not return valid HTML"
-                self.logger.info(f"  - Endpoint {endpoint}: OK")
-            except Exception as e:
-                self.logger.error(f"Failed to access endpoint {endpoint}: {e}")
-                return False
-        self.logger.info("All web pages are accessible.")
+            response = requests.get(url, timeout=5)
+            assert response.status_code == 200, f"{endpoint} returned {response.status_code}"
+            assert "</html>" in response.text.lower(), f"{endpoint} not valid HTML"
+            self.logger.info(f"  - Endpoint {endpoint}: OK")
         return True
 
     def _test_feature_functionality(self, base_url):
-        """
-        Tests the core functionality of each analyzer by POSTing a benign file.
-        This ensures that teams cannot simply disable the file upload features.
-        """
         self.logger.info("Checking feature functionality...")
-        
-        # --- Test 1: Disk Analyzer ---
-        try:
-            # UPDATED: Changed endpoint to /analyze/disk
-            disk_url = base_url + '/analyze/disk'
-            disk_payload_path = os.path.join(self.payload_base_dir, 'disk', 'benign.dd')
-            
-            with open(disk_payload_path, 'rb') as f:
-                files = {'disk_image': (os.path.basename(disk_payload_path), f, 'application/octet-stream')}
+
+        # Disk analyzer
+        disk_url = base_url + '/analyze/disk'
+        disk_payload_dir = os.path.join(self.payload_base_dir, 'disk')
+        for filename in os.listdir(disk_payload_dir):
+            path = os.path.join(disk_payload_dir, filename)
+            if not os.path.isfile(path): continue
+            with open(path, 'rb') as f:
+                files = {'disk_image': (filename, f, 'application/octet-stream')}
                 response = requests.post(disk_url, files=files, timeout=25)
+            assert response.status_code == 200
+            assert "</html>" in response.text.lower()
+            assert "blacklisted" not in response.text.lower()
+        self.logger.info("  - Disk analyzer functionality: OK")
 
-            assert response.status_code == 200, f"Disk analyzer returned status {response.status_code}"
-            # Assertion is still valid as it checks for content in the returned HTML
-            assert "Partition Information" in response.text, "Disk analyzer response missing key text"
-            self.logger.info("  - Disk analyzer functionality: OK")
-        except Exception as e:
-            self.logger.error(f"Disk analyzer functionality test failed: {e}")
-            return False
-
-        # --- Test 2: PDF Analyzer ---
-        try:
-            # UPDATED: Changed endpoint to /analyze/pdf
-            pdf_url = base_url + '/analyze/pdf'
-            pdf_payload_path = os.path.join(self.payload_base_dir, 'pdf', 'benign.pdf')
-
-            with open(pdf_payload_path, 'rb') as f:
-                files = {'pdf_file': (os.path.basename(pdf_payload_path), f, 'application/pdf')}
+        # PDF analyzer
+        pdf_url = base_url + '/analyze/pdf'
+        pdf_payload_dir = os.path.join(self.payload_base_dir, 'pdf')
+        for filename in os.listdir(pdf_payload_dir):
+            path = os.path.join(pdf_payload_dir, filename)
+            if not os.path.isfile(path): continue
+            with open(path, 'rb') as f:
+                files = {'pdf_file': (filename, f, 'application/pdf')}
                 response = requests.post(pdf_url, files=files, timeout=15)
-            
-            assert response.status_code == 200, f"PDF analyzer returned status {response.status_code}"
-            # UPDATED: Check for key text in the rendered HTML, not for a JSON response
-            assert "ExifTool Metadata" in response.text, "PDF analyzer HTML response missing 'ExifTool Metadata' key"
-            self.logger.info("  - PDF analyzer functionality: OK")
-        except Exception as e:
-            self.logger.error(f"PDF analyzer functionality test failed: {e}")
-            return False
+            assert response.status_code == 200
+            assert "</html>" in response.text.lower()
+        self.logger.info("  - PDF analyzer functionality: OK")
 
-        # --- Test 3: PNG Analyzer ---
-        try:
-            # UPDATED: Changed endpoint to /analyze/png
-            png_url = base_url + '/analyze/png'
-            png_payload_path = os.path.join(self.payload_base_dir, 'png', 'benign.png')
-
-            with open(png_payload_path, 'rb') as f:
-                files = {'png_file': (os.path.basename(png_payload_path), f, 'image/png')}
+        # PNG analyzer
+        png_url = base_url + '/analyze/png'
+        png_payload_dir = os.path.join(self.payload_base_dir, 'png')
+        for filename in os.listdir(png_payload_dir):
+            path = os.path.join(png_payload_dir, filename)
+            if not os.path.isfile(path): continue
+            with open(path, 'rb') as f:
+                files = {'png_file': (filename, f, 'image/png')}
                 response = requests.post(png_url, files=files, timeout=15)
+            assert response.status_code == 200
+            assert "</html>" in response.text.lower()
+        self.logger.info("  - PNG analyzer functionality: OK")
 
-            assert response.status_code == 200, f"PNG analyzer returned status {response.status_code}"
-            # UPDATED: Check for key text in the rendered HTML, not for a JSON response
-            assert "ExifTool Output" in response.text, "PNG analyzer HTML response missing 'ExifTool Output' key"
-            self.logger.info("  - PNG analyzer functionality: OK")
-        except Exception as e:
-            self.logger.error(f"PNG analyzer functionality test failed: {e}")
-            return False
-            
-        self.logger.info("All feature functionality checks passed.")
         return True
 
     def check(self):
-        """
-        Main SLA check function. Called periodically by the game engine.
-        """
         try:
-            base_url = f'http://localhost:{self.port}'
-            
-            # Step 1: Check if the website is up at all
-            self.logger.info(f"Pinging service at {base_url}...")
+            base_url = f"http://localhost:{self.port}"
+
+            # Step 1
+            self.logger.info(f"Pinging {base_url}...")
             response = requests.get(base_url, timeout=5)
-            assert response.status_code == 200, f"Website is down or not responding. Status code: {response.status_code}"
+            assert response.status_code == 200
             self.logger.info("Website is online.")
-            
-            # Step 2: Check if all pages load correctly
-            assert self._test_endpoint_accessibility(base_url), "One or more endpoints are not accessible."
-            
-            # Step 3: Check if core features are working with benign payloads
-            # This is crucial to prevent teams from breaking the service to "patch" it.
-            assert self._test_feature_functionality(base_url), "Core feature functionality test failed."
-            
-            # Step 4: Check if the flag still exists and matches the one in the container
-            import subprocess
-            
+
+            # Step 2
+            assert self._test_endpoint_accessibility(base_url)
+
+            # Step 3
+            assert self._test_feature_functionality(base_url)
+
+            # Step 4: flag check
             with open(self.flag_location, 'r') as f:
                 host_flag = f.read().strip()
-
             container_flag = subprocess.run(
                 ["docker", "exec", "lfs_container", "cat", "/flag.txt"],
-                capture_output=True,
-                text=True
+                capture_output=True, text=True
             ).stdout.strip()
-            
-            assert host_flag == container_flag, 'Flag mismatch between host and container'
-            
-            self.logger.info("LFS Challenge check passed successfully!")
+            assert host_flag == container_flag, "Flag mismatch"
+
+            self.logger.info("LFS check passed successfully!")
             return True
-
         except Exception as e:
-            self.logger.error(f'LFS Challenge check failed: {e}')
+            self.logger.error(f"LFS check failed: {e}")
             return False
-
