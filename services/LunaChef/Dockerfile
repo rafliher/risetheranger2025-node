@@ -72,4 +72,4 @@ EXPOSE 22
 
 USER ctfuser
 # Run the application
-CMD ["python", "start_https.py"]
+CMD ["python", "main.py"]

@@ -14,7 +14,8 @@ import sys
 container_name = "lunachef_container"
 host = "localhost"
 port = 14000
-protokol = "https"
+# protokol = "https"
+protokol = "http"
 
 def check():
     """Main check function that runs all tests - matches JJ.py logic exactly"""
@@ -62,7 +63,6 @@ def check():
         config.hash_key = hash_key
         config.FLAG = container_flag.encode()
         sys.modules["config"] = config
-        
         
         # Step 4: Test core functionality of encrypt decrypt crypto service
         endpoint_encrypt = f'{protokol}://{host}:{port}/encrypt'
@@ -135,7 +135,6 @@ def check():
 
         print('Check passed for Lunachef')
         return True
-
     except Exception as e:
         print(f'Could not check Lunachef: {e}')
         return False

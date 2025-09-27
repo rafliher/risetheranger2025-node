@@ -28,6 +28,7 @@ random.seed(signing_key['random_seed'])
 
 q = signing_key['q']
 n = signing_key['n']
+# 'q': 12 * 1024 + 1,
 
 def trim(p: List[int]) -> List[int]:
     while len(p) > 1 and p[-1] % q == 0:
