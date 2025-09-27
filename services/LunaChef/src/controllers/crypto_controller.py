@@ -1,6 +1,13 @@
 from flask import Blueprint, render_template, request, jsonify
 from services import encryption_service, signing_service, hashing_service
 
+from config import key
+from config import hash_key
+from config import signing_key
+from services.LunaChef.src.services.service_encryption import EncryptionService
+from services.LunaChef.src.services.service_hash import HashingService
+from services.LunaChef.src.services.service_signing import SigningService
+
 # Create blueprint
 crypto_bp = Blueprint('crypto', __name__)
 
@@ -17,7 +24,7 @@ def encrypt_text():
         
         if not text:
             return jsonify({'success': False, 'error': 'Text is required'})
-        
+        encryption_service = EncryptionService(key)
         result = encryption_service.encrypt(text)
         return jsonify(result)
     
@@ -33,6 +40,7 @@ def decrypt_text():
         if not encrypted_data:
             return jsonify({'success': False, 'error': 'Encrypted data is required'})
         
+        encryption_service = EncryptionService(key)
         result = encryption_service.decrypt(encrypted_data)
         return jsonify(result)
     
@@ -48,6 +56,7 @@ def sign_data():
         if not data:
             return jsonify({'success': False, 'error': 'Data is required'})
         
+        signing_service = SigningService(4, signing_key)
         result = signing_service.sign(data)
         return jsonify(result)
     
@@ -65,6 +74,8 @@ def verify_signature():
             return jsonify({'success': False, 'error': 'Data and signature are required'})
         
         # Use the updated verify method with hex signature
+        
+        signing_service = SigningService(4, signing_key)
         result = signing_service.verify(signature, data)
         return jsonify(result)
     
@@ -80,6 +91,7 @@ def hash_data():
         if not data:
             return jsonify({'success': False, 'error': 'Data is required'})
         
+        hashing_service = HashingService(hash_key)
         result = hashing_service.hash(data)
         return jsonify(result)
     
