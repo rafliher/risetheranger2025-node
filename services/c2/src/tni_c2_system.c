@@ -72,11 +72,6 @@ void process_command(char *input) {
     }
 }
 
-void exec_shell() {
-    printf("PERINGATAN: Shell akses darurat C2 diaktifkan!\n");
-    system("/bin/sh");
-}
-
 void read_classified() {
     FILE *fp = fopen("clearance_token", "r");
     if (fp) {
@@ -246,5 +241,4 @@ void hidden_backdoor() {
 
 void secret_function() {
     printf("Secret function called!\n");
-    exec_shell();
 }
