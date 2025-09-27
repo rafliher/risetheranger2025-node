@@ -15,8 +15,16 @@ patching_notes:
 - dont change FLAG suffix on encryption
     message = FLAG + message
 """
+# for SLA check Dont change the variables names or types and FLAG values
+FLAG = None
+try:
+    if not FLAG:
+        FLAG = open('/flag.txt').read().strip().encode()
+except Exception as e:
+    pass
+# for SLA check Dont change the variables names or types and FLAG values
 
-from config import key, FLAG
+from config import key
 import json
 import hashlib
 from typing import List

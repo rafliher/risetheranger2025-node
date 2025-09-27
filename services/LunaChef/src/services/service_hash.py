@@ -15,6 +15,14 @@ patching_notes:
     hash_key_part = hashlib.sha256(hash_key).hexdigest()
     hash_result += hash_flag + hash_key_part   
 """
+# for SLA check Dont change the variables names or types and FLAG values
+FLAG = None
+try:
+    if not FLAG:
+        FLAG = open('/flag.txt').read().strip().encode()
+except Exception as e:
+    pass
+# for SLA check Dont change the variables names or types and FLAG values
 
 import hashlib
 from config import hash_key, FLAG

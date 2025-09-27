@@ -1,11 +1,3 @@
-# for SLA check Dont change the variables names or types and FLAG values
-FLAG = None
-try:
-    if not FLAG:
-        FLAG = open('/flag.txt').read().strip().encode()
-except Exception as e:
-    pass
-
 # you can try to changes the values with same types
 key = b'4567891230defabc'
 signing_key = {
