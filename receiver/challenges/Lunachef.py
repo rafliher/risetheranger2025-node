@@ -109,7 +109,6 @@ class Lunachef(Challenge):
             encryptionModule = scope.get('encryption_service', None)
             module_encrypted_text = encryptionModule.encrypt(test_text)
             module_decrypted_text = encryptionModule.decrypt(module_encrypted_text['encrypted_data'])
-            print(module_decrypted_text)
             assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Module'
             module_decrypted_text = encryptionModule.decrypt(endpoint_encrypted_data)
             assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Endpoint'
