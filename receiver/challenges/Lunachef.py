@@ -29,7 +29,7 @@ class Lunachef(Challenge):
     def check(self):
         try:
             host = "localhost"
-            protokol = "https"
+            protokol = "http"
             # Step 1: Check if the flag still exists and matches the one in the container
             with open(self.flag_location, 'r') as f:
                 host_flag = f.read().strip()
