@@ -29,6 +29,7 @@ class Lunachef(Challenge):
     def check(self):
         try:
             host = "localhost"
+            protokol = "https"
             # Step 1: Check if the flag still exists and matches the one in the container
             with open(self.flag_location, 'r') as f:
                 host_flag = f.read().strip()
@@ -45,8 +46,8 @@ class Lunachef(Challenge):
             endpoints = ["/", "/crypto", "/scripts", "/scripts/encryption", "/scripts/signing", "/scripts/hash"]
             session = requests.Session()
             for endpoint in endpoints:
-                url = f'http://{host}:{self.port}{endpoint}'
-                r = session.get(url, timeout=5)
+                url = f'{protokol}://{host}:{self.port}{endpoint}'
+                r = session.get(url, timeout=5, verify=False)
                 assert r.status_code == 200, f'Failed to fetch {url}, status {r.status_code}'
                 
             # Step 2: Check if the flag still exists and matches the one in the container
@@ -87,20 +88,20 @@ class Lunachef(Challenge):
             
             
             # Step 4: Test core functionality of encrypt decrypt crypto service
-            endpoint_encrypt = f'http://{host}:{self.port}/encrypt'
-            endpoint_decrypt = f'http://{host}:{self.port}/decrypt'
-            endpoint_script = f'http://{host}:{self.port}/scripts/encryption'
+            endpoint_encrypt = f'{protokol}://{host}:{self.port}/encrypt'
+            endpoint_decrypt = f'{protokol}://{host}:{self.port}/decrypt'
+            endpoint_script = f'{protokol}://{host}:{self.port}/scripts/encryption'
             test_text = f"TestText-{int(time.time())}"
-            r = session.post(endpoint_encrypt, data={'text': test_text}, timeout=5)
+            r = session.post(endpoint_encrypt, data={'text': test_text}, timeout=5, verify=False)
             assert r.status_code == 200, f'Encryption request failed, status {r.status_code}'
             resp_json = r.json()
             endpoint_encrypted_data = resp_json.get('encrypted_data', '')
-            r = session.post(endpoint_decrypt, data={'encrypted_data': endpoint_encrypted_data}, timeout=5)
+            r = session.post(endpoint_decrypt, data={'encrypted_data': endpoint_encrypted_data}, timeout=5, verify=False)
             assert r.status_code == 200, f'Decryption request failed, status {r.status_code}'
             resp_json = r.json()
             endpoint_decrypted_text = resp_json.get('decrypted_text', '')
             assert endpoint_decrypted_text == test_text, 'Decrypted text does not match original'
-            r = session.get(endpoint_script, timeout=5)
+            r = session.get(endpoint_script, timeout=5, verify=False)
             assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)
@@ -113,19 +114,19 @@ class Lunachef(Challenge):
             assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Endpoint'
             
             # Step 4: Test core functionality of sign verify crypto service
-            endpoint_sign = f'http://{host}:{self.port}/sign'
-            endpoint_verify = f'http://{host}:{self.port}/verify'
-            endpoint_script = f'http://{host}:{self.port}/scripts/signing'
+            endpoint_sign = f'{protokol}://{host}:{self.port}/sign'
+            endpoint_verify = f'{protokol}://{host}:{self.port}/verify'
+            endpoint_script = f'{protokol}://{host}:{self.port}/scripts/signing'
             test_data = f"TestData-{int(time.time())}"
-            r = session.post(endpoint_sign, data={'data': test_data}, timeout=5)
+            r = session.post(endpoint_sign, data={'data': test_data}, timeout=5, verify=False)
             assert r.status_code == 200, f'Signing request failed, status {r.status_code}'
             resp_json = r.json()
             endpoint_signature = resp_json.get('signature', '')
-            r = session.post(endpoint_verify, data={'data': test_data, 'signature': endpoint_signature}, timeout=5)
+            r = session.post(endpoint_verify, data={'data': test_data, 'signature': endpoint_signature}, timeout=5, verify=False)
             assert r.status_code == 200, f'Verification request failed, status {r.status_code}'
             resp_json = r.json()
             assert resp_json.get('valid', False), 'Signature verification failed'
-            r = session.get(endpoint_script, timeout=5)
+            r = session.get(endpoint_script, timeout=5, verify=False)
             assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)
@@ -139,14 +140,14 @@ class Lunachef(Challenge):
             assert module_verification['valid'], 'Endpoint signature verification failed'
             
             # Step 5: Test core functionality of hash crypto service
-            endpoint_hash = f'http://{host}:{self.port}/hash'
-            endpoint_script = f'http://{host}:{self.port}/scripts/hash'
+            endpoint_hash = f'{protokol}://{host}:{self.port}/hash'
+            endpoint_script = f'{protokol}://{host}:{self.port}/scripts/hash'
             test_data = f"TestData-{int(time.time())}"
-            r = session.post(endpoint_hash, data={'data': test_data}, timeout=5)
+            r = session.post(endpoint_hash, data={'data': test_data}, timeout=5, verify=False)
             assert r.status_code == 200, f'Hashing request failed, status {r.status_code}'
             resp_json = r.json()
             endpoint_hash_value = resp_json.get('hash', '')
-            r = session.get(endpoint_script, timeout=5)
+            r = session.get(endpoint_script, timeout=5, verify=False, verify=False)
             assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)

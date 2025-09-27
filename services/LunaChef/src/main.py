@@ -1,5 +1,6 @@
 from flask import Flask, render_template, send_from_directory
 import os
+import ssl
 from dotenv import load_dotenv
 
 def load_environment():
@@ -89,7 +90,49 @@ def create_app():
     
     return app
 
+def setup_ssl_context():
+    """Setup SSL context for HTTPS"""
+    cert_dir = os.path.join(os.path.dirname(__file__), 'certs')
+    cert_file = os.path.join(cert_dir, 'server.crt')
+    key_file = os.path.join(cert_dir, 'server.key')
+    
+    # Check if certificates exist
+    if not os.path.exists(cert_file) or not os.path.exists(key_file):
+        print("🔒 SSL certificates not found. Generating self-signed certificates...")
+        try:
+            from generate_cert import generate_self_signed_cert
+            generate_self_signed_cert(cert_dir=cert_dir)
+        except ImportError:
+            print("❌ Could not import certificate generator. Please run generate_cert.py first.")
+            return None
+        except Exception as e:
+            print(f"❌ Error generating certificates: {e}")
+            return None
+    
+    # Create SSL context
+    context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+    context.load_cert_chain(cert_file, key_file)
+    return context
+
 if __name__ == '__main__':
     app = create_app()
     debug_mode = str_to_bool(os.getenv('FLASK_DEBUG', 'false'))
-    app.run(debug=debug_mode, host='0.0.0.0', port=5000)
+    
+    # SSL/HTTPS configuration
+    use_https = str_to_bool(os.getenv('USE_HTTPS', 'true'))
+    port = int(os.getenv('PORT', 5000))
+    host = os.getenv('HOST', '0.0.0.0')
+    
+    if use_https:
+        ssl_context = setup_ssl_context()
+        if ssl_context:
+            print(f"🌙 LunaChef server starting with HTTPS on https://{host}:{port}")
+            print("🔒 Using self-signed certificate (browsers will show security warning)")
+            app.run(debug=debug_mode, host=host, port=port, ssl_context=ssl_context)
+        else:
+            print("⚠️  SSL setup failed, falling back to HTTP")
+            print(f"🌙 LunaChef server starting with HTTP on http://{host}:{port}")
+            app.run(debug=debug_mode, host=host, port=port)
+    else:
+        print(f"🌙 LunaChef server starting with HTTP on http://{host}:{port}")
+        app.run(debug=debug_mode, host=host, port=port)

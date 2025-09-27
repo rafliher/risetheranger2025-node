@@ -45,6 +45,22 @@ RUN apt-get update && apt-get install -y \
 # Copy application code
 COPY src/ .
 
+# Generate .env file with configuration
+RUN echo "# LunaChef Crypto Application Configuration" > .env && \
+    echo "# Simple configuration for essential settings only" >> .env && \
+    echo "" >> .env && \
+    echo "# Flask Environment" >> .env && \
+    echo "FLASK_ENV=development" >> .env && \
+    echo "FLASK_DEBUG=true" >> .env && \
+    echo "" >> .env && \
+    echo "# Security" >> .env && \
+    echo "SECRET_KEY=lunachef-crypto-secret-key-change-in-production" >> .env && \
+    echo "" >> .env && \
+    echo "# HTTPS Configuration" >> .env && \
+    echo "USE_HTTPS=true" >> .env && \
+    echo "HOST=0.0.0.0" >> .env && \
+    echo "PORT=5000" >> .env
+
 RUN chown -R ctfuser:ctfuser /app
 
 COPY flag.txt /flag.txt
@@ -56,4 +72,4 @@ EXPOSE 22
 
 USER ctfuser
 # Run the application
-CMD ["python", "main.py"]
+CMD ["python", "start_https.py"]
