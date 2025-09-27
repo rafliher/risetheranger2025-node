@@ -1,0 +1,12 @@
+services:
+  lunachef:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+          - PASSWORD=root
+    container_name: lunachef_container
+    hostname: lunachef
+    ports:
+      - "14000:5000"
+      - "14022:22"

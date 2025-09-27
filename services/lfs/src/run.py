@@ -8,7 +8,7 @@ from modules.pdf_analyzer import handle_pdf_analysis
 from modules.png_analyzer import handle_png_analysis
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='assets')
 
 
 app.secret_key = 'd43f8b1a9e7c2d5e6a1b9f0c8d7e6a5b'

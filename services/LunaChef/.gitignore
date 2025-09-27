@@ -30,12 +30,4 @@ coverage.xml
 uploads/
 *.tmp
 *.bak
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-README.md
-docker-compose.yml
-Dockerfile
 lab/

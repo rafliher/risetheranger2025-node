@@ -1,17 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify
-from services import (
-    service_encryption,
-    service_signing,
-    service_hash
-)
+from services import encryption_service, signing_service, hashing_service
 
 # Create blueprint
 crypto_bp = Blueprint('crypto', __name__)
-
-# Initialize services
-encryption_service = service_encryption.EncryptionService()
-signing_service = service_signing.SigningService()
-hash_service = service_hash.HashingService()
 
 @crypto_bp.route('/crypto')
 def crypto_page():
@@ -89,7 +80,7 @@ def hash_data():
         if not data:
             return jsonify({'success': False, 'error': 'Data is required'})
         
-        result = hash_service.hash(data)
+        result = hashing_service.hash(data)
         return jsonify(result)
     
     except Exception as e:

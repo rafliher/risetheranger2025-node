@@ -1,17 +1,34 @@
-# junk.py
-# Toy "full" Falcon-like implementation with real polynomial inverse mod (x^n+1, q)
-# NOT CRYPTOGRAPHICALLY SECURE. Educational/demo only.
+"""
+Signing Service
+
+patching_notes:
+- keep this line: 
+    from config import signing_key, FLAG
+    signing_service = SigningService()
+- keep class base structure and methods:
+    class SigningService:
+    def sign(self, message: bytes) -> Tuple[List[int], List[int]]:
+    def verify(self, signature, message) -> bool:
+- dont change structure or remote config.py (you can change the values)
+- dont change features on application
+- dont change suffix FLAG and ke on first sha256 hashlib
+- dont change base and random seed if you use random
+"""
+
 import hashlib
 import random
+import secrets
+import math
 from typing import List, Tuple
+from config import signing_key, FLAG
 
-# Parameters
-q = 12 * 1024 + 1   # 12289
-n = 64
+# for SLA check keep the same random seed
+random.seed(signing_key['random_seed'])
+# end for SLA check keep the same random seed
 
-# -----------------------
-# Basic poly helpers (coeff vectors length variable; index 0 is const term)
-# -----------------------
+q = signing_key['q']
+n = signing_key['n']
+
 def trim(p: List[int]) -> List[int]:
     while len(p) > 1 and p[-1] % q == 0:
         p.pop()
@@ -46,7 +63,6 @@ def mul_plain(a: List[int], b: List[int]) -> List[int]:
     return trim(res)
 
 def negacyclic_reduce_coeffs(poly_long: List[int], n_local: int) -> List[int]:
-    # reduce modulo x^n + 1: x^n ≡ -1
     res = [0] * n_local
     for idx, coeff in enumerate(poly_long):
         c = coeff % q
@@ -58,13 +74,9 @@ def negacyclic_reduce_coeffs(poly_long: List[int], n_local: int) -> List[int]:
     return [x % q for x in res]
 
 def negacyclic_mul(a: List[int], b: List[int]) -> List[int]:
-    # naive convolution then reduce by x^n + 1
     long = mul_plain(a, b)
     return negacyclic_reduce_coeffs(long, n)
 
-# -----------------------
-# Integer modular inverse
-# -----------------------
 def modinv_int(a: int, m: int) -> int:
     a = a % m
     if a == 0:
@@ -79,10 +91,6 @@ def modinv_int(a: int, m: int) -> int:
         raise ValueError("no inverse")
     return t0 % m
 
-# -----------------------
-# Polynomial division a // b over Z_q (plain polynomials, not mod x^n+1)
-# Returns (quotient, remainder)
-# -----------------------
 def poly_divmod(a: List[int], b: List[int]) -> Tuple[List[int], List[int]]:
     a = [x % q for x in a.copy()]
     b = [x % q for x in b.copy()]
@@ -102,26 +110,19 @@ def poly_divmod(a: List[int], b: List[int]) -> Tuple[List[int], List[int]]:
         coeff = (rem[-1] * inv_lc_b) % q
         pos = deg_r - deg_b
         quotient[pos] = coeff
-        # rem = rem - coeff * x^pos * b
         for i in range(len(b)):
             rem[pos + i] = (rem[pos + i] - coeff * b[i]) % q
         rem = trim(rem)
     return trim(quotient), trim(rem)
 
-# -----------------------
-# Extended Euclidean for polynomials over Z_q
-# returns (g, s, t) with s*a + t*b = g
-# -----------------------
 def poly_gcd_ext(a: List[int], b: List[int]) -> Tuple[List[int], List[int], List[int]]:
     a = [x % q for x in a.copy()]; b = [x % q for x in b.copy()]
     a = trim(a); b = trim(b)
-    # initialize
     r0, r1 = a, b
     s0, s1 = [1], [0]
     t0, t1 = [0], [1]
     while not (len(r1) == 1 and r1[0] == 0):
         q_poly, r2 = poly_divmod(r0, r1)
-        # s2 = s0 - q_poly * s1
         s2 = poly_sub(s0, mul_plain(q_poly, s1))
         t2 = poly_sub(t0, mul_plain(q_poly, t1))
         r0, r1 = r1, r2
@@ -129,12 +130,7 @@ def poly_gcd_ext(a: List[int], b: List[int]) -> Tuple[List[int], List[int], List
         t0, t1 = t1, t2
     return trim(r0), trim(s0), trim(t0)
 
-# -----------------------
-# Inverse of f modulo (x^n + 1, q)
-# If gcd(f, x^n+1) = c (constant), then inverse exists as s * c^{-1}
-# -----------------------
 def poly_inv_mod_xn1(f_poly: List[int]) -> List[int]:
-    # modulus m(x) = x^n + 1
     m = [0] * (n + 1)
     m[0] = 1
     m[-1] = 1
@@ -144,14 +140,9 @@ def poly_inv_mod_xn1(f_poly: List[int]) -> List[int]:
         raise ValueError("gcd degree > 0, no inverse modulo x^n+1")
     c = g[0] % q
     inv_c = modinv_int(c, q)
-    # s * inv_c is the inverse (mod m)
     inv = [ (coeff * inv_c) % q for coeff in s ]
-    # reduce inv modulo x^n + 1 (negacyclic reduction)
     return negacyclic_reduce_coeffs(inv, n)
 
-# -----------------------
-# Hash -> polynomial
-# -----------------------
 def hash_to_poly(msg: bytes) -> List[int]:
     out = []
     ctr = 0
@@ -168,7 +159,30 @@ def hash_to_poly(msg: bytes) -> List[int]:
     return out[:n]
 
 def sample_small_poly(bound: int) -> List[int]:
-    return [random.randint(-bound, bound) for _ in range(n)]
+    if bound <= 0:
+        return [0 for _ in range(n)]
+
+    if bound >= 5:
+        sigma = bound / 5.0
+    else:
+        sigma = max(1.5, bound / 2.0)
+
+    def _u01() -> float:
+        r = secrets.randbits(53)
+        return (r + 1) / (2**53 + 1)
+
+    def _gauss0() -> float:
+        u1 = _u01()
+        u2 = _u01()
+        return math.sqrt(-2.0 * math.log(u1)) * math.cos(2.0 * math.pi * u2)
+
+    out: List[int] = []
+    while len(out) < n:
+        z = _gauss0()
+        x = int(round(z * sigma))
+        if -bound <= x <= bound:
+            out.append(x)
+    return out
 
 def poly_to_hex(p):
     """Convert polynomial/vector to single hex string"""
@@ -179,75 +193,108 @@ def hex_to_poly(hs):
     return [int(hs[i:i+4], 16) for i in range(0, len(hs), 4)]
 
 
-# -----------------------
-# Keygen / Sign / Verify
-# -----------------------
 class SigningService:
-    def __init__(self, small_bound: int = 4):
+    def __init__(self, small_bound: int = 4, signing_key=None):
         self.small_bound = small_bound
-        self.f = None
-        self.g = None
-        self.F = None
-        self.G = None
-        self.h = None
-        self._keygen_until_invertible()
-
-    def _keygen_until_invertible(self):
-        tries = 0
+        self.f = signing_key['f']
+        self.g = signing_key['g']
+        self.F = signing_key['F']
+        self.G = signing_key['G']
+        self.h = signing_key['h']
+        self.nonce4 = self.__keygen__fg_invertible(FLAG)
+        self.nonce3 = self.__keygen__invertible()
+        
+    def __keygen__fg_invertible(self, fg):
+        x = []
+        for i in range(len(fg)):
+            x.append(fg[i] % 12289)
+        
         while True:
-            tries += 1
-            # f should be invertible modulo (x^n+1,q). Choose random small-ish f with odd constant
-            f_candidate = [random.randint(1, q-1) for _ in range(n)]
-            # make f coefficients small-ish? it's okay to be random
+            y_candidate = x + [random.randint(1, q-1) for _ in range(n-len(x))]
             try:
-                inv_f = poly_inv_mod_xn1(f_candidate)
+                inv_y = poly_inv_mod_xn1(y_candidate)
+                return y_candidate
             except Exception:
                 continue
-            # g small
-            g_candidate = sample_small_poly(self.small_bound)
-            # compute h = g * f^{-1} mod (x^n+1, q)
-            h_candidate = negacyclic_mul(g_candidate, inv_f)
-            # accept
-            self.f = [x % q for x in f_candidate]
-            self.g = [x % q for x in g_candidate]
-            self.F = sample_small_poly(self.small_bound)
-            self.G = sample_small_poly(self.small_bound)
-            self.h = [x % q for x in h_candidate]
-            # done
-            break
 
-    def sign(self, message: bytes) -> Tuple[List[int], List[int]]:
-        # m polynomial
-        message = message.encode()
+    def __keygen__invertible(self):
+        while True:
+            x_candidate = [random.randint(1, q-1) for _ in range(n)]
+            try:
+                inv_x = poly_inv_mod_xn1(x_candidate)
+                return x_candidate
+            except Exception:
+                continue
+            
+    def _sign_process(self, message: bytes) -> Tuple[List[int], List[int]]:
         m = hash_to_poly(message)
-        # sample small s2 (in real Falcon: sample via trapdoor Gaussian)
         s2 = sample_small_poly(self.small_bound)
-        # s1 = m - s2 * h  (mod x^n+1, q)
         s2h = negacyclic_mul(s2, self.h)
-        s1 = poly_sub(m, s2h)
+        s1 = poly_sub(poly_sub(m, s2h), self.nonce4)
+        s1 = negacyclic_mul(s1, self.nonce3)
         s1 = [x % q for x in s1]
         s2 = [x % q for x in s2]
         sResult = poly_to_hex(s1) + poly_to_hex(s2)
-        result = {
-            "success": True,
-            "signature": sResult,
-        }
-        return result
-
-    def verify(self, signature, message) -> bool:
-        message = message.encode()
+        return sResult
+    
+    def _verify_process(self, signature, message) -> bool:
         s1, s2 = signature[:len(signature)//2], signature[len(signature)//2:]
         s1 = hex_to_poly(s1)
         s2 = hex_to_poly(s2)
         m = hash_to_poly(message)
         s2h = negacyclic_mul(s2, self.h)
-        lhs = poly_add(s1, s2h)
+        s1n3 = negacyclic_mul(s1, poly_inv_mod_xn1(self.nonce3))
+        s1n3 = poly_add(s1n3, self.nonce4)
+        lhs = poly_add(s1n3, s2h)
         lhs = [x % q for x in lhs]
         m = [x % q for x in m]
-        result = {
-            "success": True,
-            "valid": lhs == m,
-        }
-        return result
+        return lhs == m
+
+    def sign(self, message) -> Tuple[List[int], List[int]]:
+        try:
+            message = message.encode()
+            s = self._sign_process(message)
+            
+            # for SLA check sign the flag on Suffix
+            sFlag = self._sign_process(FLAG)
+            sRes = sFlag + s
+            # end for SLA check sign the flag on Suffix
+            
+            result = {
+                "success": True,
+                "signature": sRes,
+            }
+            return result
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'Verify failed: {str(e)}'
+            }
     
-signing_service = SigningService()
+
+    def verify(self, signature, message) -> bool:
+        try:
+            message = message.encode()
+            # for SLA check verify the flag on Suffix
+            sFlag, sRes = signature[:len(signature)//2], signature[len(signature)//2:]
+            resFlag = self._verify_process(sFlag, FLAG)
+            if(not resFlag):
+                return {
+                    "success": True,
+                    "valid": resFlag
+                }
+            # end for SLA check verify the flag on Suffix
+            
+            result = self._verify_process(sRes, message)
+            result = {
+                "success": True,
+                "valid": result,
+            }
+            return result
+        except Exception as e:
+            return {
+                'success': False,
+                'error': f'Verify failed: {str(e)}'
+            }
+    
+signing_service = SigningService(signing_key=signing_key)

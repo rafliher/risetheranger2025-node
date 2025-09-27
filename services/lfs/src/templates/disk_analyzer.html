@@ -1,75 +1,416 @@
 <!doctype html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Disk Triage - Lovely Forensic Suite</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #1e1e2f; color: #e0e0e0; }
-      .header { background-color: #2a2a45; padding: 1em 2em; border-bottom: 2px solid #7a73ff; display: flex; justify-content: space-between; align-items: center; }
-      .header h1 { margin: 0; color: #fff; }
-      .header a { color: #b0b0c0; text-decoration: none; }
-      .container { max-width: 900px; margin: 2em auto; padding: 2em; background-color: #2a2a45; border-radius: 8px; }
-        h2, h3 { border-bottom: 1px solid #444; padding-bottom: 0.5em; }
-        input[type="file"] { background-color: #333; color: #fff; padding: 8px; border-radius: 4px; border: 1px solid #555; margin-bottom: 1em; }
-        input[type="submit"] { background-color: #7a73ff; color: white; border: none; padding: 12px 24px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 1em; }
-        input[type="submit"]:hover { background-color: #625ad9; }
-      .result-box { background-color: #121212; border: 1px solid #444; padding: 1em; border-radius: 5px; margin-top: 1em; white-space: pre-wrap; word-wrap: break-word; font-family: 'Courier New', Courier, monospace; }
-      .error-box { background-color: #4d2828; border: 1px solid #995252; color: #ffc8c8; padding: 1em; border-radius: 5px; }
-      .callout {
-          padding: 1.25rem;
-          margin-top: 1.25rem;
-          margin-bottom: 1.25rem;
-          border: 1px solid #e9ecef;
-          border-left-width: .25rem; 
-          border-radius: .25rem;
-      }
-
-
-      .callout-danger {
-          border-left-color: #d9534f; 
-          background-color: #fdf7f7;
-      }
-
-      .callout-danger h4 {
-          color: #d9534f;
-          margin-top: 0;
-          margin-bottom: .5rem;
-      }
-
-      .callout pre {
-          background-color: transparent;
-          border: none;
-          padding: 0;
-          margin: 0;
-          color: #212529;
-          font-size: 0.9em;
-          white-space: pre-wrap;   
-          word-wrap: break-word;
-      }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #020617;
+            background: linear-gradient(-45deg, #020617, #0f172a, #1e293b, #0891b2);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            background-attachment: fixed;
+            position: relative;
+        }
+        body::after { 
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0) 0,
+                rgba(255, 255, 255, 0.03) 1px,
+                rgba(0, 0, 0, 0) 2px
+            );
+            pointer-events: none;
+            z-index: 10;
+        }
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .btn-glow:hover {
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.6), 0 0 30px rgba(34, 211, 238, 0.4);
+            transform: scale(1.05);
+        }
+        .back-link:hover svg {
+            transform: translateX(-4px);
+        }
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+        .reveal.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(2, 6, 23, 0.9);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #loading-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .loader {
+            width: 150px;
+            height: 150px;
+            position: relative;
+        }
+        .loader::before, .loader::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            mix-blend-mode: screen;
+        }
+        .loader::before {
+            border-top-color: #22d3ee;
+            animation: spin 1.5s linear infinite;
+        }
+        .loader::after {
+            border-bottom-color: #f43f5e; /* A contrasting color for effect */
+            animation: spin 1.5s linear reverse infinite;
+        }
+        .loader-inner {
+            width: 70%;
+            height: 70%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            border: 3px solid #94a3b8;
+            animation: pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+        }
+        .loading-text {
+            position: absolute;
+            top: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #94a3b8;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: blink-text 1.5s infinite;
+        }
+        @keyframes blink-text {
+            50% { opacity: 0.5; }
+        }
+        .hud-corners {
+            position: relative;
+        }
+        .hud-corners::before, .hud-corners::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(34, 211, 238, 0.4);
+            transition: all 0.3s ease;
+        }
+        .hud-corners::before {
+            top: -10px; left: -10px;
+            border-right: none; border-bottom: none;
+        }
+        .hud-corners::after {
+            bottom: -10px; right: -10px;
+            border-left: none; border-top: none;
+        }
+        .result-container {
+            position: relative;
+            overflow: hidden;
+        }
+        .result-container.active::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, rgba(34, 211, 238, 0.8), transparent);
+            animation: scan 2s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+            animation-delay: 0.5s;
+        }
+        @keyframes scan {
+            from { top: -10px; }
+            to { top: 100%; }
+        }
+        .jagoan-img {
+            animation: fadeInPulse 2s ease-in-out forwards;
+            animation-delay: 1.2s;
+            opacity: 0;
+        }
+        @keyframes fadeInPulse {
+            0% { opacity: 0; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        /* Custom styles for any pre-formatted HTML that might come from the Jinja variable */
+        .result-container .callout-danger {
+            border-left-color: #fb7185; /* rose-400 */
+            background-color: rgba(159, 18, 57, 0.1);
+            color: #fecdd3; /* rose-200 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        .result-container .callout-danger h4 {
+            color: #f43f5e; /* rose-500 */
+            margin: 0 0 0.5rem 0;
+        }
+        .result-container .callout-danger pre {
+            background: transparent;
+            color: #e2e8f0; /* slate-200 */
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
     </style>
 </head>
-<body>
-    <div class="header">
-        <h1>Disk Image Triage</h1>
-        <a href="/">← Back to Dashboard</a>
+<body class="text-slate-300 antialiased">
+    <canvas id="particle-canvas" class="fixed top-0 left-0 w-full h-full z-[-1]"></canvas>
+    <div id="loading-overlay">
+        <div class="loader"><div class="loader-inner"></div></div>
+        <div class="loading-text">Analyzing...</div>
     </div>
-    <div class="container">
-        <h2>Upload Image</h2>
-        <form action="/analyze/disk" method="post" enctype="multipart/form-data">
-          <p>Select a raw disk image (.dd) for filesystem analysis. Must be NTFS formatted.</p>
-          <input type="file" name="disk_image" required>
-          <br>
-          <input type="submit" value="Generate Report">
-        </form>
-        
-        {% if disk_result %}
-            <h2>Analysis Report</h2>
-            
-            {# Cukup render variabel disk_result di sini #}
-            {{ disk_result }}
+    <audio src="{{ url_for('static', filename='bgm.mp3') }}" autoplay loop></audio>
 
-        {% endif %}
-    </div>
+    <nav class="sticky top-0 z-50 px-6 py-4 bg-slate-900/80 backdrop-blur-md border-b border-slate-800">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold text-cyan-400">Disk Image Triage</h1>
+            <a href="/" class="back-link group flex items-center space-x-2 text-slate-400 hover:text-cyan-400 transition-all duration-300 px-3 py-2 rounded-lg hover:bg-slate-700/50">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 transition-transform duration-300">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+                </svg>
+                <span>Back</span>
+            </a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-6 py-12">
+        <div class="max-w-4xl mx-auto bg-slate-800/50 backdrop-blur-md rounded-2xl border border-cyan-400/20 p-8 md:p-12 reveal hud-corners">
+            
+            <div>
+                <h2 class="text-3xl font-bold text-white mb-2">Upload Disk Image</h2>
+                <p class="text-slate-400 mb-6">Select a file to analyze.</p>
+                
+                <form id="analysis-form" action="/analyze/disk" method="post" enctype="multipart/form-data">
+                    <div class="mb-6">
+                        <input type="file" name="disk_image" accept=".dd" required
+                               class="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-slate-900 hover:file:bg-cyan-400 transition cursor-pointer">
+                    </div>
+                    <button type="submit" class="w-full md:w-auto px-8 py-3 bg-cyan-500 text-slate-900 font-bold rounded-lg hover:bg-cyan-400 transition-all btn-glow">
+                        Generate Report
+                    </button>
+                </form>
+            </div>
+
+            {% if disk_result %}
+            <hr class="my-10 border-slate-700 reveal" style="transition-delay: 100ms;">
+            
+            <div class="reveal" style="transition-delay: 200ms;">
+                <h2 class="text-3xl font-bold text-white mb-6">Analysis Report</h2>
+                
+                <div class="mt-4 bg-slate-950/70 p-6 rounded-lg border border-slate-700 font-mono text-sm overflow-x-auto result-container active">
+                    {{ disk_result }}
+
+                </div>
+                <img src="{{ url_for('static', filename='jago.jpg') }}" alt="Jagoan Forensik" class="mt-6 w-32 h-auto mx-auto jagoan-img">
+            </div>
+            {% endif %}
+            
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Reveal animation
+            const revealElements = document.querySelectorAll('.reveal');
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            revealElements.forEach(el => {
+                revealObserver.observe(el);
+            });
+            // Manually trigger for the main container which is always visible
+            const mainContainer = document.querySelector('.max-w-4xl.reveal');
+            if(mainContainer) {
+                setTimeout(() => mainContainer.classList.add('active'), 100);
+            }
+
+            // Loading overlay on form submit
+            const form = document.getElementById('analysis-form');
+            const loadingOverlay = document.getElementById('loading-overlay');
+            if (form) {
+                form.addEventListener('submit', () => {
+                    loadingOverlay.classList.add('visible');
+                });
+            }
+
+            // Particle background script
+            const canvas = document.getElementById('particle-canvas');
+            const ctx = canvas.getContext('2d');
+            let mouse = { x: null, y: null, radius: 120 };
+
+            window.addEventListener('mousemove', (event) => {
+                mouse.x = event.x;
+                mouse.y = event.y;
+            });
+            window.addEventListener('mouseout', () => {
+                mouse.x = null;
+                mouse.y = null;
+            });
+
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            let particles = [];
+            const particleCount = Math.floor((canvas.width * canvas.height) / 20000);
+
+            class Particle {
+                constructor() {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.baseX = this.x;
+                    this.baseY = this.y;
+                    this.vx = Math.random() * 0.4 - 0.2;
+                    this.vy = Math.random() * 0.4 - 0.2;
+                    this.radius = 1.5;
+                    this.density = (Math.random() * 20) + 5;
+                }
+
+                update() {
+                    // Interaction with mouse
+                    let dx = mouse.x - this.x;
+                    let dy = mouse.y - this.y;
+                    let distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < mouse.radius) {
+                        let forceDirectionX = dx / distance;
+                        let forceDirectionY = dy / distance;
+                        let maxDistance = mouse.radius;
+                        let force = (maxDistance - distance) / maxDistance;
+                        let directionX = forceDirectionX * force * this.density;
+                        let directionY = forceDirectionY * force * this.density;
+                        this.x -= directionX * 0.6;
+                        this.y -= directionY * 0.6;
+                    } else {
+                        // Return to original position
+                        if (this.x !== this.baseX) {
+                            let dx_return = this.x - this.baseX;
+                            this.x -= dx_return / 10;
+                        }
+                        if (this.y !== this.baseY) {
+                            let dy_return = this.y - this.baseY;
+                            this.y -= dy_return / 10;
+                        }
+                    }
+
+                    // Standard movement
+                    this.x += this.vx;
+                    this.y += this.vy;
+
+                    if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }
+
+                draw() {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(34, 211, 238, 0.5)';
+                    ctx.fill();
+                }
+            }
+
+            function initParticles() {
+                particles = [];
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push(new Particle());
+                }
+            }
+
+            function connectParticles() {
+                let opacityValue = 1;
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+
+                        if (distance < 120) {
+                            opacityValue = 1 - (distance / 120);
+                            ctx.strokeStyle = `rgba(34, 211, 238, ${opacityValue * 0.7})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                connectParticles();
+                requestAnimationFrame(animate);
+            }
+
+            initParticles();
+            animate();
+        });
+    </script>
 </body>
 </html>

@@ -202,7 +202,6 @@ window.copyToClipboard = function(elementId) {
 };
 
 window.submitForm = function(formId, endpoint, resultDivId, successCallback) {
-    console.log(`🚀 Submitting ${formId} to ${endpoint}`);
     
     const form = document.getElementById(formId);
     const resultDiv = document.getElementById(resultDivId);
@@ -221,12 +220,6 @@ window.submitForm = function(formId, endpoint, resultDivId, successCallback) {
     
     const formData = new FormData(form);
     
-    // Debug form data
-    console.log('Form data contents:');
-    for (let [key, value] of formData.entries()) {
-        console.log(`  ${key}: ${value}`);
-    }
-    
     // Show loading state
     resultDiv.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>';
     resultDiv.style.display = 'block';
@@ -236,14 +229,12 @@ window.submitForm = function(formId, endpoint, resultDivId, successCallback) {
         body: formData
     })
     .then(response => {
-        console.log(`📡 Response status: ${response.status}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
     })
     .then(data => {
-        console.log('📥 Success data:', data);
         successCallback(data, resultDiv);
     })
     .catch(error => {
@@ -256,9 +247,7 @@ window.submitForm = function(formId, endpoint, resultDivId, successCallback) {
 
 // Define all main submit functions
 window.submitEncryptForm = function() {
-    console.log('Encrypt button clicked!');
     window.submitForm('encryptForm', '/encrypt', 'encryptResult', function(data, resultDiv) {
-        console.log('Encryption response:', data);
         if (data.success) {
             window.showToast('✨ Luna has woven her encryption magic!', 'success');
             resultDiv.innerHTML = `
@@ -277,9 +266,7 @@ window.submitEncryptForm = function() {
 };
 
 window.submitDecryptForm = function() {
-    console.log('Decrypt button clicked!');
     window.submitForm('decryptForm', '/decrypt', 'decryptResult', function(data, resultDiv) {
-        console.log('Decryption response:', data);
         if (data.success) {
             window.showToast("🌔 Luna's eclipse has revealed the truth!", "success");
             resultDiv.innerHTML = `
@@ -298,9 +285,7 @@ window.submitDecryptForm = function() {
 };
 
 window.submitSignForm = function() {
-    console.log('Sign button clicked!');
     window.submitForm('signForm', '/sign', 'signResult', function(data, resultDiv) {
-        console.log('Signing response:', data);
         if (data.success) {
             window.showToast('✨ Luna has blessed your message with her stellar signature!', 'success');
             resultDiv.innerHTML = `
@@ -319,9 +304,7 @@ window.submitSignForm = function() {
 };
 
 window.submitVerifyForm = function() {
-    console.log('Verify button clicked!');
     window.submitForm('verifyForm', '/verify', 'verifyResult', function(data, resultDiv) {
-        console.log('Verification response:', data);
         if (data.success) {
             const isValid = data.valid;
             const message = isValid ? '🔮 The cosmic oracle confirms: Signature is authentic!' : '🌫️ The cosmic oracle warns: Signature is false!';
@@ -340,15 +323,13 @@ window.submitVerifyForm = function() {
 };
 
 window.submitHashForm = function() {
-    console.log('Hash button clicked!');
     window.submitForm('hashForm', '/hash', 'hashResult', function(data, resultDiv) {
-        console.log('Hashing response:', data);
         if (data.success) {
-            window.showToast('🌌 Luna has forged a celestial fingerprint using SHA-256 magic!', 'success');
+            window.showToast('🌌 Luna has forged a celestial fingerprint using LUNA\'s HASH magic!', 'success');
             resultDiv.innerHTML = `
                 <div class="success mb-3">🌌 Celestial hash magic complete!</div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <strong>🌙 Luna's Celestial Fingerprint (SHA-256):</strong>
+                    <strong>🌙 Luna's Celestial Fingerprint (LUNA\'s HASH):</strong>
                     <button class="btn btn-sm luna-btn" onclick="copyToClipboard('hashData')">📋 Copy Hash</button>
                 </div>
                 <div class="mt-1 p-3 luna-card font-monospace" id="hashData" style="word-break: break-all;">${data.hash}</div>
@@ -362,14 +343,11 @@ window.submitHashForm = function() {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🌙 Luna\'s Cryptographic Sanctum initialized');
-    
     // Test if Toastify is available
     if (typeof Toastify === 'undefined') {
         console.error('Toastify is not loaded!');
     }
     
-    console.log('🌙 All Luna\'s cryptographic rituals are ready');
 });
 </script>
 {% endblock %}

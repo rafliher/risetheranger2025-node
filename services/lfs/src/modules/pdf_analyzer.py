@@ -1,4 +1,3 @@
-
 import os
 import subprocess
 import uuid
@@ -8,20 +7,51 @@ from PyPDF2.generic import DictionaryObject, IndirectObject
 import pikepdf
 from io import BytesIO, StringIO
 import sys
+from markupsafe import escape
 
 BLACKLIST_FILE = '/app/blacklists/exec_blacklist.txt'
 UPLOAD_FOLDER = '/app/uploads'
 DOWNLOAD_FOLDER = '/app/static/downloads'  
-MAX_FILE_SIZE = 3 * 1024 * 1024
+MAX_FILE_SIZE = 150 * 1024
 PDF_SIGNATURE = b'%PDF-'
 FLAG = open('/flag.txt', 'r').read().strip()
 
+def onlyonelenchars(s):
+    return len(s) <= 1
+
 def get_blacklist():
     try:
-        with open(BLACKLIST_FILE, 'r', encoding='utf-8') as f:
-            return [ln.strip() for ln in f.read(4096).splitlines() if ln.strip()]
+        with open(BLACKLIST_FILE, 'r') as f:
+            lines = f.read().splitlines()
+            valid_lines = lines[:4]
+            processed_lines = []
+            for line in valid_lines:
+                clean_line = line.strip()[:10]
+                if onlyonelenchars(clean_line):
+                    continue
+                processed_lines.append(clean_line)
+            return processed_lines
     except FileNotFoundError:
-        return []
+        return
+
+def get_string_quota():
+    try:
+        quota = 0
+        with open(BLACKLIST_FILE, 'r') as f:
+            lines = f.read().splitlines()
+            valid_lines = lines[:4] 
+            for line in valid_lines:
+                lng = len(line.strip()[:10])
+                clean_line = line.strip()[:10]
+                if onlyonelenchars(clean_line):
+                    continue
+                line_quota = (lng * 3) + ((10 - lng) * 15)
+                quota += line_quota
+            if quota == 0:
+                quota = 150
+            return quota
+    except FileNotFoundError:
+        return
 
 def dump_pdf_objects(reader: PdfReader):
     output_lines = []
@@ -47,6 +77,8 @@ def dump_pdf_objects(reader: PdfReader):
                 subtype = obj.get("/Subtype")
                 action = obj.get("/A")
 
+                print("subtype",subtype, flush=True)
+
                 if subtype == "/Link" and action:
                     try:
                         action_obj = action.get_object()
@@ -59,7 +91,9 @@ def dump_pdf_objects(reader: PdfReader):
                 elif subtype == "/Widget" and action:
                     try:
                         action_obj = action.get_object()
+                        print(action_obj, flush=True)
                         if action_obj.get("/S") == "/JavaScript":
+                            print("Got JS object", flush=True)
                             js_code = action_obj.get("/JS")
                             length = len(js_code) if js_code else 0
                             interesting_objects.append(f"  - Page {page_num + 1}: Found Form Widget with JavaScript (Code length: {length} bytes)")
@@ -91,7 +125,7 @@ def handle_pdf_analysis(request):
 
     file.seek(0, os.SEEK_END)
     if file.tell() > MAX_FILE_SIZE:
-        return {'error': "File size exceeds the 3MB limit."}
+        return {'error': "File size exceeds the 150KB limit."}
     file.seek(0)
 
     first_bytes = file.read(5)
@@ -109,9 +143,10 @@ def handle_pdf_analysis(request):
     try:
         try:
             exif_process = subprocess.run(['exiftool', filepath], capture_output=True, text=True, timeout=10)
-            results['exif_data'] = exif_process.stdout if exif_process.returncode == 0 else exif_process.stderr
+            exif_data = exif_process.stdout if exif_process.returncode == 0 else exif_process.stderr
+            results['exif_data'] = escape(exif_data)
         except Exception as e:
-            results['exif_data'] = f"exiftool error: {repr(e)}"
+            results['exif_data'] = f"exiftool error: {escape(repr(e))}"
 
         stream_scan_output = []
         with open(filepath, 'rb') as f:
@@ -134,9 +169,9 @@ def handle_pdf_analysis(request):
                     images_count = 0
                 stream_scan_output.append(f"  - Page {i+1} contains {images_count} image(s).")
 
-            results['object_dump_data'] = dump_pdf_objects(reader)
+            results['object_dump_data'] = escape(dump_pdf_objects(reader))
 
-        results['stream_scan_data'] = "\n".join(stream_scan_output)
+        results['stream_scan_data'] = escape("\n".join(stream_scan_output))
 
         html_output_dir = os.path.join(temp_dir, "html_export")
         os.makedirs(html_output_dir, exist_ok=True)
@@ -161,7 +196,7 @@ def handle_pdf_analysis(request):
             shutil.make_archive(os.path.join(DOWNLOAD_FOLDER, session_id), 'zip', html_output_dir)
             results['download_zip_path'] = f"/static/downloads/{zip_filename}"
         except Exception as e:
-            results['html_export_error'] = f"pdftohtml failed or not installed: {repr(e)}"
+            results['html_export_error'] = f"pdftohtml failed or not installed: {escape(repr(e))}"
 
         pyscript_code = None
         try:
@@ -231,7 +266,11 @@ def handle_pdf_analysis(request):
             blacklist = get_blacklist()
             for word in blacklist:
                 if word and word in pyscript_code:
+                    print("Blacklisted!", flush=True)
                     raise ValueError(f"Execution blocked: Malicious keyword '{word}' found.")
+            string_quota = get_string_quota()
+            if len(pyscript_code) > string_quota:
+                raise ValueError("Execution blocked: PyScript code exceeds allowed length based on blacklist.")
 
             try:
                 old_stdout = sys.stdout
@@ -245,12 +284,12 @@ def handle_pdf_analysis(request):
                 else:
                     results['exec_result'] = captured_output
             except Exception as exec_e:
-                results['exec_result_error'] = f"PyScript execution error: {repr(exec_e)}"
+                results['exec_result_error'] = f"PyScript execution error: {escape(repr(exec_e))}"
         else:
             results['pyscript_found'] = False
 
     except Exception as e:
-        results['processing_error'] = str(e)
+        results['error'] = escape(str(e))
     finally:
         if os.path.exists(temp_dir):
             try:

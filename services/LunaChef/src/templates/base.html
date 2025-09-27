@@ -502,9 +502,7 @@
             
             // Load track immediately
             loadTrack(currentTrackIndex);
-            
-            // Try to auto-start, but handle if browser blocks it
-            console.log('Attempting auto-start...');
+
             setTimeout(() => {
                 if (!audioEnabled) {
                     forceStartAudio();
@@ -513,7 +511,6 @@
             
             // Event listeners
             audio.addEventListener('canplay', function() {
-                console.log('Audio ready');
                 audioInitialized = true;
                 // Try auto-start if not already enabled
                 if (!audioEnabled) {
