@@ -42,6 +42,8 @@ RUN chmod 755 /opt && \
 # Make the vulnerable binary have basic executable permissions
 RUN chmod 755 /opt/tni_c2_system
 
+RUN chown -R ctfuser:ctfuser /opt
+
 # Configure SSH for basic access
 RUN echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
     echo "PermitRootLogin no" >> /etc/ssh/sshd_config && \
