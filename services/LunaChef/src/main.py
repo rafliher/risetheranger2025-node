@@ -119,7 +119,9 @@ if __name__ == '__main__':
     debug_mode = str_to_bool(os.getenv('FLASK_DEBUG', 'false'))
     
     # SSL/HTTPS configuration
-    use_https = str_to_bool(os.getenv('USE_HTTPS', 'true'))
+    use_https = str_to_bool(os.getenv('USE_HTTPS', 'false'))
+    # use_https = str_to_bool(os.getenv('USE_HTTPS', 'true'))
+    
     port = int(os.getenv('PORT', 5000))
     host = os.getenv('HOST', '0.0.0.0')
     

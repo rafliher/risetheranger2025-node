@@ -45,6 +45,10 @@ RUN apt-get update && apt-get install -y \
 # Copy application code
 COPY src/ .
 
+# Copy startup script and set executable (as root)
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
 # Generate .env file with configuration
 RUN echo "# LunaChef Crypto Application Configuration" > .env && \
     echo "# Simple configuration for essential settings only" >> .env && \
@@ -70,6 +74,5 @@ RUN chown root:root /flag.txt && chmod 644 /flag.txt
 EXPOSE 5000
 EXPOSE 22
 
-USER ctfuser
-# Run the application
-CMD ["python", "start_https.py"]
+# Run the startup script (starts sshd as root and app as ctfuser)
+CMD ["/app/start.sh"]

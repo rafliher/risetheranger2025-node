@@ -14,7 +14,8 @@ import sys
 container_name = "lunachef_container"
 host = "localhost"
 port = 14000
-protokol = "https"
+# protokol = "https"
+protokol = "http"
 
 def check():
     """Main check function that runs all tests - matches JJ.py logic exactly"""
@@ -62,7 +63,7 @@ def check():
         config.hash_key = hash_key
         config.FLAG = container_flag.encode()
         sys.modules["config"] = config
-        
+        sys.modules["FLAG"] = container_flag.encode()
         
         # Step 4: Test core functionality of encrypt decrypt crypto service
         endpoint_encrypt = f'{protokol}://{host}:{port}/encrypt'
@@ -83,7 +84,9 @@ def check():
         source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
         source_code_decoding = html.unescape(source_code)
         exec(source_code_decoding, scope, scope)
-        encryptionModule = scope.get('encryption_service', None)
+        EncryptionService = scope.get('EncryptionService', None)
+        encryptionModule = EncryptionService(encryption_key, FLAG=host_flag.encode())
+        # encryptionModule = scope.get('encryption_service', None)
         module_encrypted_text = encryptionModule.encrypt(test_text)
         module_decrypted_text = encryptionModule.decrypt(module_encrypted_text['encrypted_data'])
         assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Module'
@@ -108,13 +111,15 @@ def check():
         source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
         source_code_decoding = html.unescape(source_code)
         exec(source_code_decoding, scope, scope)
-        signingModule = scope.get('signing_service', None)
+        SigningService = scope.get('SigningService', None)
+        signingModule = SigningService(4, signing_key, FLAG=host_flag.encode())
+        # signingModule = scope.get('signing_service', None)
         module_signature = signingModule.sign(test_data)
-        module_verification = signingModule.verify(module_signature['signature'], test_data)
-        assert module_verification['valid'], 'Module signature verification failed'
-        # print(endpoint_signature)
         module_verification = signingModule.verify(endpoint_signature, test_data)
         assert module_verification['valid'], 'Endpoint signature verification failed'
+        
+        module_verification = signingModule.verify(module_signature['signature'], test_data)
+        assert module_verification['valid'], 'Module signature verification failed'
         
         # Step 5: Test core functionality of hash crypto service
         endpoint_hash = f'{protokol}://{host}:{port}/hash'
@@ -129,13 +134,14 @@ def check():
         source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
         source_code_decoding = html.unescape(source_code)
         exec(source_code_decoding, scope, scope)
-        hashingModule = scope.get('hashing_service', None)
+        HashingService = scope.get('HashingService', None)
+        hashingModule = HashingService(hash_key, FLAG=host_flag.encode())
+        # hashingModule = scope.get('hashing_service', None)
         module_hash_value = hashingModule.hash(test_data)
         assert module_hash_value['hash'] == endpoint_hash_value, 'Hash values do not match between module and endpoint'
 
         print('Check passed for Lunachef')
         return True
-
     except Exception as e:
         print(f'Could not check Lunachef: {e}')
         return False

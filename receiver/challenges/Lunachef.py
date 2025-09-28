@@ -29,7 +29,8 @@ class Lunachef(Challenge):
     def check(self):
         try:
             host = "localhost"
-            protokol = "https"
+            protokol = "http"
+            port = self.port
             # Step 1: Check if the flag still exists and matches the one in the container
             with open(self.flag_location, 'r') as f:
                 host_flag = f.read().strip()
@@ -85,12 +86,12 @@ class Lunachef(Challenge):
             config.hash_key = hash_key
             config.FLAG = container_flag.encode()
             sys.modules["config"] = config
-            
+            sys.modules["FLAG"] = container_flag.encode()
             
             # Step 4: Test core functionality of encrypt decrypt crypto service
-            endpoint_encrypt = f'{protokol}://{host}:{self.port}/encrypt'
-            endpoint_decrypt = f'{protokol}://{host}:{self.port}/decrypt'
-            endpoint_script = f'{protokol}://{host}:{self.port}/scripts/encryption'
+            endpoint_encrypt = f'{protokol}://{host}:{port}/encrypt'
+            endpoint_decrypt = f'{protokol}://{host}:{port}/decrypt'
+            endpoint_script = f'{protokol}://{host}:{port}/scripts/encryption'
             test_text = f"TestText-{int(time.time())}"
             r = session.post(endpoint_encrypt, data={'text': test_text}, timeout=5, verify=False)
             assert r.status_code == 200, f'Encryption request failed, status {r.status_code}'
@@ -106,7 +107,9 @@ class Lunachef(Challenge):
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)
             exec(source_code_decoding, scope, scope)
-            encryptionModule = scope.get('encryption_service', None)
+            EncryptionService = scope.get('EncryptionService', None)
+            encryptionModule = EncryptionService(encryption_key, FLAG=host_flag.encode())
+            # encryptionModule = scope.get('encryption_service', None)
             module_encrypted_text = encryptionModule.encrypt(test_text)
             module_decrypted_text = encryptionModule.decrypt(module_encrypted_text['encrypted_data'])
             assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Module'
@@ -114,9 +117,9 @@ class Lunachef(Challenge):
             assert module_decrypted_text['decrypted_text'] == test_text, 'Module decrypted text does not match original Endpoint'
             
             # Step 4: Test core functionality of sign verify crypto service
-            endpoint_sign = f'{protokol}://{host}:{self.port}/sign'
-            endpoint_verify = f'{protokol}://{host}:{self.port}/verify'
-            endpoint_script = f'{protokol}://{host}:{self.port}/scripts/signing'
+            endpoint_sign = f'{protokol}://{host}:{port}/sign'
+            endpoint_verify = f'{protokol}://{host}:{port}/verify'
+            endpoint_script = f'{protokol}://{host}:{port}/scripts/signing'
             test_data = f"TestData-{int(time.time())}"
             r = session.post(endpoint_sign, data={'data': test_data}, timeout=5, verify=False)
             assert r.status_code == 200, f'Signing request failed, status {r.status_code}'
@@ -131,31 +134,35 @@ class Lunachef(Challenge):
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)
             exec(source_code_decoding, scope, scope)
-            signingModule = scope.get('signing_service', None)
+            SigningService = scope.get('SigningService', None)
+            signingModule = SigningService(4, signing_key, FLAG=host_flag.encode())
+            # signingModule = scope.get('signing_service', None)
             module_signature = signingModule.sign(test_data)
-            module_verification = signingModule.verify(module_signature['signature'], test_data)
-            assert module_verification['valid'], 'Module signature verification failed'
-            # print(endpoint_signature)
             module_verification = signingModule.verify(endpoint_signature, test_data)
             assert module_verification['valid'], 'Endpoint signature verification failed'
             
+            module_verification = signingModule.verify(module_signature['signature'], test_data)
+            assert module_verification['valid'], 'Module signature verification failed'
+            
             # Step 5: Test core functionality of hash crypto service
-            endpoint_hash = f'{protokol}://{host}:{self.port}/hash'
-            endpoint_script = f'{protokol}://{host}:{self.port}/scripts/hash'
+            endpoint_hash = f'{protokol}://{host}:{port}/hash'
+            endpoint_script = f'{protokol}://{host}:{port}/scripts/hash'
             test_data = f"TestData-{int(time.time())}"
             r = session.post(endpoint_hash, data={'data': test_data}, timeout=5, verify=False)
             assert r.status_code == 200, f'Hashing request failed, status {r.status_code}'
             resp_json = r.json()
             endpoint_hash_value = resp_json.get('hash', '')
-            r = session.get(endpoint_script, timeout=5, verify=False, verify=False)
+            r = session.get(endpoint_script, timeout=5, verify=False)
             assert r.status_code == 200, f'Failed to fetch script page, status {r.status_code}'
             source_code = r.text.split('><code class="language-python">')[1].split('</code></pre>')[0]
             source_code_decoding = html.unescape(source_code)
             exec(source_code_decoding, scope, scope)
-            hashingModule = scope.get('hashing_service', None)
+            HashingService = scope.get('HashingService', None)
+            hashingModule = HashingService(hash_key, FLAG=host_flag.encode())
+            # hashingModule = scope.get('hashing_service', None)
             module_hash_value = hashingModule.hash(test_data)
             assert module_hash_value['hash'] == endpoint_hash_value, 'Hash values do not match between module and endpoint'
-            
+
             self.logger.info('Check passed for lunachef')
             return True
 

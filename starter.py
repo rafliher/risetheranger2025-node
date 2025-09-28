@@ -22,15 +22,22 @@ def main():
     args = parser.parse_args()
 
     cwd = os.getcwd()
-    env = generate_env(args.username, args.password)
     receiver_env = os.path.join(cwd, 'receiver/.env')
     services_env = os.path.join(cwd, 'services/.env')
 
-    with open(receiver_env, 'w') as f:
-        f.write(env)
-    
-    with open(services_env, 'w') as f:
-        f.write(env)
+    # Only generate .env files if they don't already exist
+    if not os.path.exists(receiver_env) or not os.path.exists(services_env):
+        env = generate_env(args.username, args.password)
+        
+        with open(receiver_env, 'w') as f:
+            f.write(env)
+        
+        with open(services_env, 'w') as f:
+            f.write(env)
+        
+        print("Generated new .env files")
+    else:
+        print("Using existing .env files")
 
     os.chdir(os.path.join(cwd, 'services'))
     os.system(f'docker compose -f docker-compose.yml up --build -d {args.challenges}')

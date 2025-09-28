@@ -3,8 +3,8 @@ Signing Service
 
 patching_notes:
 - keep this line: 
-    from config import signing_key, FLAG
-    signing_service = SigningService()
+    from config import signing_key
+    signing_service = SigningService(4, signing_key)
 - keep class base structure and methods:
     class SigningService:
     def sign(self, message: bytes) -> Tuple[List[int], List[int]]:
@@ -14,20 +14,14 @@ patching_notes:
 - dont change suffix FLAG and ke on first sha256 hashlib
 - dont change base and random seed if you use random
 """
-
 import hashlib
 import random
 import secrets
 import math
 from typing import List, Tuple
-from config import signing_key, FLAG
 
-# for SLA check keep the same random seed
-random.seed(signing_key['random_seed'])
-# end for SLA check keep the same random seed
-
-q = signing_key['q']
-n = signing_key['n']
+q = 12 * 1024 + 1
+n = 64
 
 def trim(p: List[int]) -> List[int]:
     while len(p) > 1 and p[-1] % q == 0:
@@ -194,15 +188,23 @@ def hex_to_poly(hs):
 
 
 class SigningService:
-    def __init__(self, small_bound: int = 4, signing_key=None):
+    def __init__(self, small_bound, signing_key, FLAG=None):
+        # for SLA check Dont change the variables names or types and FLAG valuea
+        if not FLAG:
+            self.FLAG = open('/flag.txt').read().strip().encode()    
+        else:
+            self.FLAG = FLAG
+        # for SLA check Dont change the variables names or types and FLAG values
         self.small_bound = small_bound
         self.f = signing_key['f']
         self.g = signing_key['g']
-        self.F = signing_key['F']
-        self.G = signing_key['G']
         self.h = signing_key['h']
-        self.nonce4 = self.__keygen__fg_invertible(FLAG)
-        self.nonce3 = self.__keygen__invertible()
+        # for SLA check keep the same random seed
+        self.rand = random.Random()
+        self.rand.seed(signing_key['random_seed'])
+        # end for SLA check keep the same random seed
+        self.nonce4 = poly_sub(self.__keygen__fg_invertible(self.FLAG[len(self.FLAG)//2:]), self.f) 
+        self.nonce3 = self.__keygen__fg_invertible(self.FLAG[:len(self.FLAG)//2])
         
     def __keygen__fg_invertible(self, fg):
         x = []
@@ -210,7 +212,7 @@ class SigningService:
             x.append(fg[i] % 12289)
         
         while True:
-            y_candidate = x + [random.randint(1, q-1) for _ in range(n-len(x))]
+            y_candidate = x + [self.rand.randint(1, q-1) for _ in range(n-len(x))]
             try:
                 inv_y = poly_inv_mod_xn1(y_candidate)
                 return y_candidate
@@ -219,7 +221,7 @@ class SigningService:
 
     def __keygen__invertible(self):
         while True:
-            x_candidate = [random.randint(1, q-1) for _ in range(n)]
+            x_candidate = [self.rand.randint(1, q-1) for _ in range(n)]
             try:
                 inv_x = poly_inv_mod_xn1(x_candidate)
                 return x_candidate
@@ -256,7 +258,7 @@ class SigningService:
             s = self._sign_process(message)
             
             # for SLA check sign the flag on Suffix
-            sFlag = self._sign_process(FLAG)
+            sFlag = self._sign_process(self.FLAG)
             sRes = sFlag + s
             # end for SLA check sign the flag on Suffix
             
@@ -277,7 +279,7 @@ class SigningService:
             message = message.encode()
             # for SLA check verify the flag on Suffix
             sFlag, sRes = signature[:len(signature)//2], signature[len(signature)//2:]
-            resFlag = self._verify_process(sFlag, FLAG)
+            resFlag = self._verify_process(sFlag, self.FLAG)
             if(not resFlag):
                 return {
                     "success": True,
@@ -296,5 +298,3 @@ class SigningService:
                 'success': False,
                 'error': f'Verify failed: {str(e)}'
             }
-    
-signing_service = SigningService(signing_key=signing_key)

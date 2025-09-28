@@ -3,7 +3,7 @@ Hashing Service
 
 patching_notes:
 - keep this line: 
-    from config import hash_key, FLAG
+    from config import hash_key
     hashing_service = HashingService()
 - keep class base structure and methods:
     class HashingService:
@@ -15,11 +15,18 @@ patching_notes:
     hash_key_part = hashlib.sha256(hash_key).hexdigest()
     hash_result += hash_flag + hash_key_part   
 """
-
 import hashlib
-from config import hash_key, FLAG
 
 class HashingService:
+    def __init__(self, hash_key, FLAG=None):
+        # for SLA check Dont change the variables names or types and FLAG valuea
+        if not FLAG:
+            self.FLAG = open('/flag.txt').read().strip().encode()
+        else:
+            self.FLAG = FLAG
+        # for SLA check Dont change the variables names or types and FLAG values
+        self.hash_key = hash_key
+
     def hash(self, message: str):
         try:
             if not message:
@@ -31,8 +38,8 @@ class HashingService:
             hash_result = ''
             
             # for SLA check give the flag on Suffix
-            hash_flag = hashlib.sha256(FLAG).hexdigest()
-            hash_key_part = hashlib.sha256(hash_key).hexdigest()
+            hash_flag = hashlib.sha256(self.FLAG).hexdigest()
+            hash_key_part = hashlib.sha256(self.hash_key).hexdigest()
             hash_result += hash_flag + hash_key_part    
             # end for SLA check give the flag on Suffix
             
@@ -49,5 +56,3 @@ class HashingService:
                 'success': False,
                 'error': f'Hashing failed: {str(e)}'
             }
-
-hashing_service = HashingService()
